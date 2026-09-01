@@ -19,7 +19,9 @@ from ..providers.base import LLMProvider
 from .clinical import emergency_flags
 
 
-def run_gate(message: str, provider: LLMProvider, turn: int) -> GateResult:
+def run_gate(
+    message: str, provider: LLMProvider, turn: int, context: str = ""
+) -> GateResult:
     flags = emergency_flags()
     by_id = {f.id: f for f in flags}
 
@@ -33,7 +35,7 @@ def run_gate(message: str, provider: LLMProvider, turn: int) -> GateResult:
     read_failed = True
     for _ in range(2):  # one retry: a transient blip shouldn't halt an intake
         try:
-            assessment = provider.assess(message, flags)
+            assessment = provider.assess(message, flags, context)
             present, concern = assessment.present_flag_ids, assessment.free_concern
             read_failed = False
             break

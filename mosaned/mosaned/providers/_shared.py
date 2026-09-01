@@ -29,11 +29,11 @@ class JSONProviderBase:
         finally:
             print(f"  [{label}: {time.perf_counter() - start:.1f}s]", flush=True)
 
-    def assess(self, message: str, flags: list[FlagSpec]) -> GateAssessment:
+    def assess(self, message: str, flags: list[FlagSpec], context: str = "") -> GateAssessment:
         raw = self._timed(
             "gate",
             prompts.ASSESS_SYSTEM,
-            prompts.assess_prompt(message, flags),
+            prompts.assess_prompt(message, flags, context),
             prompts.assess_schema(flags),
         )
         known = {f.id for f in flags}

@@ -12,14 +12,21 @@ from typing import Any
 from ..domain import FlagSpec, Slot
 
 ASSESS_SYSTEM = (
-    "You read a patient's message for danger signs, in this order.\n"
-    "First, using everything you know as an experienced emergency clinician and "
-    "WITHOUT looking at any list, say whether anything here would make you send "
-    "this person for immediate care.\n"
-    "Then, separately, list which of the named warning signs are present. List only "
-    "the ones actually present -- usually that is none.\n"
-    "Do not diagnose, advise, or explain. When unsure either way, err toward "
-    "concern: a false alarm is harmless here and a missed sign is not."
+    "You read a patient conversation for danger signs, in this order.\n"
+    "\n"
+    "First: using everything you know as an experienced emergency clinician, say "
+    "whether this person needs care RIGHT NOW rather than an appointment. Say yes "
+    "ONLY when the conversation actually describes something that would make you "
+    "act today. A short, vague, or partial answer is NOT a reason to say yes. "
+    "Missing information is NOT a reason to say yes. Most ordinary complaints -- a "
+    "cough, a rash, a sore throat, an ache -- are not emergencies, and for those "
+    "the answer is no.\n"
+    "\n"
+    "Then: list which of the NAMED warning signs below are present. Each of those "
+    "is a specific question, so there you should err the other way -- if a named "
+    "sign is plausibly present, list it.\n"
+    "\n"
+    "Do not diagnose, advise, or explain."
 )
 
 CLASSIFY_SYSTEM = (
@@ -66,10 +73,15 @@ def assess_schema(flags: list[FlagSpec]) -> dict[str, Any]:
     }
 
 
-def assess_prompt(message: str, flags: list[FlagSpec]) -> str:
+def assess_prompt(message: str, flags: list[FlagSpec], context: str = "") -> str:
+    """A message is judged in its conversation, not alone. "It's dry" means
+    nothing by itself; as an answer about a three-day cough it means a great
+    deal, and judging it without that is asking an unanswerable question."""
     lines = "\n".join(f"- {f.id}: {f.sense}" for f in flags)
+    conversation = f"Conversation so far:\n{context}\n\n" if context else ""
     return (
-        f"Patient message:\n\"\"\"{message}\"\"\"\n\n"
+        f"{conversation}"
+        f"Latest patient message:\n\"\"\"{message}\"\"\"\n\n"
         f"Named warning signs:\n{lines}"
     )
 

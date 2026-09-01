@@ -48,7 +48,7 @@ _COMPLAINT_CUES: dict[str, tuple[str, ...]] = {
 class StubProvider:
     name = "stub"
 
-    def assess(self, message: str, flags: list[FlagSpec]) -> GateAssessment:
+    def assess(self, message: str, flags: list[FlagSpec], context: str = "") -> GateAssessment:
         low = message.lower()
         present = [f.id for f in flags if any(cue in low for cue in _CUES.get(f.id, ()))]
         # The stub has no clinical judgment, so it never raises a concern of its

@@ -70,7 +70,9 @@ class IntakeSession:
         self.transcript.append(Turn("patient", message))
 
         # 1. The gate, before anything else and on every single message.
-        latest = gate_mod.run_gate(message, self._provider, self.turn_count)
+        latest = gate_mod.run_gate(
+            message, self._provider, self.turn_count, self._gate_context()
+        )
         self.gate = gate_mod.merge(self.gate, latest)
         self.history.red_flags_fired = list(self.gate.fired)
 
@@ -122,6 +124,21 @@ class IntakeSession:
         return {"state": self.state.value, "reply": question, "awaiting": slot.id}
 
     # ---- internals -------------------------------------------------------
+
+    def _gate_context(self, turns: int = 6) -> str:
+        """What the gate needs to judge the newest message. Without it the gate
+        is asked whether a bare "it's dry" is an emergency, which is not a
+        question anyone can answer."""
+        if not self.transcript:
+            return ""
+        lines = [
+            f"{'patient' if turn.role == 'patient' else 'assistant'}: {turn.text}"
+            for turn in self.transcript[-turns - 1:-1]
+        ]
+        complaint = self.history.presenting_complaint_raw
+        if complaint:
+            lines.insert(0, f"(came in about: {complaint})")
+        return "\n".join(lines)
 
     def _establish_complaint(self, message: str) -> None:
         self.history.presenting_complaint_raw = message.strip()

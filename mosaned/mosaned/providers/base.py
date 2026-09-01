@@ -16,7 +16,7 @@ from ..domain import FlagSpec, GateAssessment, Slot
 class LLMProvider(Protocol):
     name: str
 
-    def assess(self, message: str, flags: list[FlagSpec]) -> GateAssessment:
+    def assess(self, message: str, flags: list[FlagSpec], context: str = "") -> GateAssessment:
         """Read one message for danger: which named flags are present, and the
         model's own unanchored judgment. Sensor only -- it never decides
         whether to escalate."""

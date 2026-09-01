@@ -49,6 +49,16 @@ first in the schema so a fruitless list scan can't anchor it into saying it is
 unworried. The flags come back as a short array of what's present, not a boolean
 per flag — on a local model that is roughly twenty times fewer output tokens.
 
+The two halves of that call carry **opposite biases on purpose**. The named
+signs are specific questions, so a plausible match is reported. The free
+judgment is open-ended, so it says yes only on positive evidence — "unsure"
+there means the model is being asked about a short answer, not that something
+is wrong. Getting that backwards makes the companion shout emergency at "it's
+dry", and a safety net that cries wolf is ignored within a day.
+
+The gate also sees the **conversation**, not just the newest message. "It's
+dry" alone is unjudgeable; as an answer about a three-day cough it is not.
+
 The gate **fails closed**. If a message can't be read for danger at all, the
 intake halts (after one retry) rather than continuing, and says plainly that it
 couldn't check — it never claims to have found something it didn't.
@@ -72,7 +82,7 @@ authoring queue, driven by real demand.
 pip install -r requirements.txt
 
 python run.py            # terminal conversation, deterministic stub, no model
-python -m pytest tests   # 31 tests
+python -m pytest tests   # 33 tests
 uvicorn mosaned.main:app --reload
 ```
 

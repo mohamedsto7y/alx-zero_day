@@ -7,7 +7,7 @@ from mosaned.providers.stub import StubProvider
 
 class AlwaysConcerned(StubProvider):
     """A model that finds nothing on the fixed list but is worried anyway."""
-    def assess(self, message, flags):
+    def assess(self, message, flags, context=""):
         return GateAssessment(
             present_flag_ids=[],
             free_concern=FreeConcern(True, "something about this worries me"),
@@ -19,7 +19,7 @@ class SilentProvider(StubProvider):
 
 
 class BrokenProvider(StubProvider):
-    def assess(self, message, flags):
+    def assess(self, message, flags, context=""):
         raise RuntimeError("provider down")
 
 
@@ -64,11 +64,11 @@ def test_a_transient_failure_is_retried_before_halting():
     class FlakyOnce(StubProvider):
         calls = 0
 
-        def assess(self, message, flags):
+        def assess(self, message, flags, context=""):
             FlakyOnce.calls += 1
             if FlakyOnce.calls == 1:
                 raise RuntimeError("blip")
-            return super().assess(message, flags)
+            return super().assess(message, flags, context)
 
     result = run_gate("I have a mild headache", FlakyOnce(), turn=1)
     assert not result.read_failed
@@ -116,3 +116,28 @@ def test_escalation_stops_the_intake_completely():
     session.send("ok but what about my cough")
     assert session.state is SessionState.ESCALATED
     assert len(session.transcript) == before
+
+
+def test_gate_is_given_the_conversation_not_just_the_last_message():
+    """A bare "it's dry" told the model nothing, so it guessed emergency. The
+    gate must see what the answer is an answer to."""
+    seen = {}
+
+    class Recording(StubProvider):
+        def assess(self, message, flags, context=""):
+            seen["context"] = context
+            return super().assess(message, flags, context)
+
+    session = IntakeSession(_provider=Recording())
+    session.send("I've had a cough for 3 days")
+    session.send("it's dry")
+
+    assert "cough for 3 days" in seen["context"]
+
+
+def test_an_ordinary_follow_up_answer_does_not_escalate():
+    session = IntakeSession(_provider=SilentProvider())
+    session.send("I've had a cough for 3 days")
+    result = session.send("it's dry")
+    assert session.state is SessionState.GATHERING
+    assert "emergency" not in result["reply"].lower()
