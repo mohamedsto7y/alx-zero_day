@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from ..domain import FlagSpec, FreeConcern, Slot
+from ..domain import FlagSpec, FreeConcern, GateAssessment, Slot
 
 # Crude cue words per flag, for offline testing only.
 _CUES: dict[str, tuple[str, ...]] = {
@@ -48,14 +48,12 @@ _COMPLAINT_CUES: dict[str, tuple[str, ...]] = {
 class StubProvider:
     name = "stub"
 
-    def sense_flags(self, message: str, flags: list[FlagSpec]) -> dict[str, bool]:
+    def assess(self, message: str, flags: list[FlagSpec]) -> GateAssessment:
         low = message.lower()
-        return {f.id: any(cue in low for cue in _CUES.get(f.id, ())) for f in flags}
-
-    def free_concern(self, message: str) -> FreeConcern:
-        # The stub has no clinical judgment. It never adds a concern of its own,
-        # so tests exercise the flag list rather than this branch.
-        return FreeConcern(concerned=False)
+        present = [f.id for f in flags if any(cue in low for cue in _CUES.get(f.id, ()))]
+        # The stub has no clinical judgment, so it never raises a concern of its
+        # own: tests exercise the flag list rather than that branch.
+        return GateAssessment(present_flag_ids=present, free_concern=FreeConcern(concerned=False))
 
     def classify_complaint(self, message: str, categories: list[str]) -> str:
         low = message.lower()

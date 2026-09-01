@@ -50,10 +50,22 @@ class FreeConcern:
 
 
 @dataclass(frozen=True)
+class GateAssessment:
+    """One read of a patient message: which named flags are present, plus the
+    model's own unanchored judgment. Both travel in a single response, but they
+    stay independent signals -- the OR that combines them lives in the engine."""
+    present_flag_ids: list[str]
+    free_concern: FreeConcern
+
+
+@dataclass(frozen=True)
 class GateResult:
     escalate: bool
     fired: list[FiredFlag] = field(default_factory=list)
     free_concern: FreeConcern | None = None
+    # True when the message could not be read for danger at all. Not the same
+    # as "nothing found": we halt rather than let an unread message through.
+    read_failed: bool = False
 
     @property
     def emergency_flags(self) -> list[FiredFlag]:

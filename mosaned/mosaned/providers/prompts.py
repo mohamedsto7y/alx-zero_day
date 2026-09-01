@@ -11,18 +11,15 @@ from typing import Any
 
 from ..domain import FlagSpec, Slot
 
-SENSE_SYSTEM = (
-    "You read a patient's message and report whether specific warning signs are present. "
-    "Answer only true or false for each. Do not diagnose, advise, or explain. "
-    "If a sign is plausibly present but you are unsure, answer true: a false alarm is "
-    "harmless here and a missed sign is not."
-)
-
-CONCERN_SYSTEM = (
-    "You read a patient's message and say whether anything in it would worry an "
-    "experienced emergency clinician enough to send this person for immediate care. "
-    "Use everything you know; you are not limited to any list. Do not diagnose. "
-    "If unsure, say you are concerned."
+ASSESS_SYSTEM = (
+    "You read a patient's message for danger signs, in this order.\n"
+    "First, using everything you know as an experienced emergency clinician and "
+    "WITHOUT looking at any list, say whether anything here would make you send "
+    "this person for immediate care.\n"
+    "Then, separately, list which of the named warning signs are present. List only "
+    "the ones actually present -- usually that is none.\n"
+    "Do not diagnose, advise, or explain. When unsure either way, err toward "
+    "concern: a false alarm is harmless here and a missed sign is not."
 )
 
 CLASSIFY_SYSTEM = (
@@ -48,33 +45,33 @@ SPECIALTY_SYSTEM = (
 )
 
 
-def sense_schema(flags: list[FlagSpec]) -> dict[str, Any]:
+def assess_schema(flags: list[FlagSpec]) -> dict[str, Any]:
+    """`concerned` is declared first so the model commits to its own judgment
+    before it scans the list -- a scan that found nothing must not anchor it
+    into saying it is unworried. `present` is a short array rather than a
+    boolean per flag: on a local model that is the difference between emitting
+    a handful of tokens and emitting one key/value pair for every flag we know."""
     return {
         "type": "object",
-        "properties": {f.id: {"type": "boolean"} for f in flags},
-        "required": [f.id for f in flags],
+        "properties": {
+            "concerned": {"type": "boolean"},
+            "concern_reason": {"type": "string"},
+            "present": {
+                "type": "array",
+                "items": {"type": "string", "enum": [f.id for f in flags]},
+            },
+        },
+        "required": ["concerned", "concern_reason", "present"],
         "additionalProperties": False,
     }
 
 
-def sense_prompt(message: str, flags: list[FlagSpec]) -> str:
+def assess_prompt(message: str, flags: list[FlagSpec]) -> str:
     lines = "\n".join(f"- {f.id}: {f.sense}" for f in flags)
-    return f"Patient message:\n\"\"\"{message}\"\"\"\n\nWarning signs to report on:\n{lines}"
-
-
-CONCERN_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "concerned": {"type": "boolean"},
-        "reason": {"type": "string"},
-    },
-    "required": ["concerned", "reason"],
-    "additionalProperties": False,
-}
-
-
-def concern_prompt(message: str) -> str:
-    return f"Patient message:\n\"\"\"{message}\"\"\"\n\nWould this need immediate care?"
+    return (
+        f"Patient message:\n\"\"\"{message}\"\"\"\n\n"
+        f"Named warning signs:\n{lines}"
+    )
 
 
 def classify_schema(categories: list[str]) -> dict[str, Any]:

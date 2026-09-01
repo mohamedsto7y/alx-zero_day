@@ -5,6 +5,13 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
+try:  # optional: lets settings live in a .env file instead of the shell
+    from dotenv import load_dotenv
+
+    load_dotenv()
+except ImportError:  # pragma: no cover - dotenv is a convenience, not a requirement
+    pass
+
 PKG_DIR = Path(__file__).resolve().parent
 CLINICAL_DIR = PKG_DIR / "clinical"
 FLOWS_DIR = CLINICAL_DIR / "flows"
@@ -27,6 +34,13 @@ class Settings:
 
     # Hard stop so a stuck conversation can't loop forever.
     max_turns: int = int(os.getenv("MOSANED_MAX_TURNS", "16"))
+
+    # Let the model word each question. Warmer, but it costs a call per turn --
+    # noticeable on a local model, free on a hosted one.
+    phrase_questions: bool = os.getenv("MOSANED_PHRASE_QUESTIONS", "0") == "1"
+
+    # Print how long each model call took.
+    debug_timing: bool = os.getenv("MOSANED_DEBUG_TIMING", "0") == "1"
 
     # Refuse to serve if the emergency criteria carry no doctor's signature.
     # Off for local development; must be on for anything resembling a patient.

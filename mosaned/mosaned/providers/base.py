@@ -9,18 +9,17 @@ from __future__ import annotations
 
 from typing import Any, Protocol, runtime_checkable
 
-from ..domain import FlagSpec, FreeConcern, Slot
+from ..domain import FlagSpec, GateAssessment, Slot
 
 
 @runtime_checkable
 class LLMProvider(Protocol):
     name: str
 
-    def sense_flags(self, message: str, flags: list[FlagSpec]) -> dict[str, bool]:
-        """Fill a fixed boolean per red flag. Sensor only, never a decision."""
-
-    def free_concern(self, message: str) -> FreeConcern:
-        """Unconstrained second opinion, OR-ed with the flag list."""
+    def assess(self, message: str, flags: list[FlagSpec]) -> GateAssessment:
+        """Read one message for danger: which named flags are present, and the
+        model's own unanchored judgment. Sensor only -- it never decides
+        whether to escalate."""
 
     def classify_complaint(self, message: str, categories: list[str]) -> str:
         """Pick one category from the list, or 'unknown'. Cannot invent one."""

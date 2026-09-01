@@ -1,5 +1,5 @@
 """The question loop, the flow tiers, and what comes out."""
-from mosaned.domain import FreeConcern, SessionState, StructuredHistory
+from mosaned.domain import SessionState, StructuredHistory
 from mosaned.engine.clinical import load_flow
 from mosaned.engine.loop import (
     apply_clinician_notes, apply_derivations, next_slot, record,
@@ -9,8 +9,7 @@ from mosaned.providers.stub import StubProvider
 
 
 class Quiet(StubProvider):
-    def free_concern(self, message):
-        return FreeConcern(concerned=False)
+    """The stub already volunteers no concern of its own."""
 
 
 def test_authored_flow_used_when_it_exists():

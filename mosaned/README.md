@@ -44,6 +44,15 @@ OR-ed:
 
 Either fires and the intake stops. The list is a floor, not a ceiling.
 
+Both signals come back from **one** model call, with the free judgment declared
+first in the schema so a fruitless list scan can't anchor it into saying it is
+unworried. The flags come back as a short array of what's present, not a boolean
+per flag — on a local model that is roughly twenty times fewer output tokens.
+
+The gate **fails closed**. If a message can't be read for danger at all, the
+intake halts (after one retry) rather than continuing, and says plainly that it
+couldn't check — it never claims to have found something it didn't.
+
 ## Three tiers, not dozens of flows
 
 1. **Complaint router** — classifies the opening message, constrained to a list.
@@ -63,7 +72,7 @@ authoring queue, driven by real demand.
 pip install -r requirements.txt
 
 python run.py            # terminal conversation, deterministic stub, no model
-python -m pytest tests   # 29 tests
+python -m pytest tests   # 31 tests
 uvicorn mosaned.main:app --reload
 ```
 
@@ -92,7 +101,12 @@ decisions can be tested offline.
 | `MOSANED_LANG` | `en` | Swap to `ar` once `strings/ar.json` exists |
 | `MOSANED_DB` | `./mosaned.db` | |
 | `MOSANED_MAX_TURNS` | `16` | Hard stop on a stuck conversation |
+| `MOSANED_PHRASE_QUESTIONS` | `0` | `1` lets the model word questions — one extra call per turn |
+| `MOSANED_DEBUG_TIMING` | `0` | `1` prints how long each model call took |
 | `MOSANED_REQUIRE_REVIEW` | `0` | Set `1` to refuse to serve unreviewed criteria |
+
+Settings are read from a `.env` file if one exists (copy `.env.example`), so you
+never have to set shell variables.
 
 ## API
 

@@ -20,6 +20,13 @@ class UnreviewedClinicalData(RuntimeError):
     """Raised when the emergency criteria carry no doctor's signature."""
 
 
+def _plain_question(slot) -> str:
+    """The flow's own wording, used when we aren't spending a model call on
+    phrasing. A flow may carry an explicit `ask`; otherwise the slot's topic
+    reads well enough on its own."""
+    return t("ask.template", topic=slot.about)
+
+
 @dataclass
 class Turn:
     role: str          # "patient" | "system"
@@ -101,12 +108,14 @@ class IntakeSession:
         if slot is None:
             return self._complete()
 
-        try:
-            question = self._provider.phrase_question(
-                slot, self.history.presenting_complaint_category, self.asked
-            )
-        except Exception:
-            question = t("ask.fallback")
+        question = _plain_question(slot)
+        if settings.phrase_questions:
+            try:
+                question = self._provider.phrase_question(
+                    slot, self.history.presenting_complaint_category, self.asked
+                )
+            except Exception:
+                pass
 
         self.asked.append(question)
         self.transcript.append(Turn("system", question))
@@ -127,11 +136,19 @@ class IntakeSession:
     def _escalate(self) -> dict[str, Any]:
         self.state = SessionState.ESCALATED
         self.history.care_level = CareLevel.EMERGENCY
-        body = (
-            f"{t('escalate.emergency.title')}\n\n"
-            f"{t('escalate.emergency.body')}\n\n"
-            f"{t('escalate.emergency.footer')}"
-        )
+        if self.gate and self.gate.read_failed and not self.gate.fired:
+            # We halted because we could not check, not because we found
+            # something. Saying otherwise would be a lie to a worried person.
+            body = (
+                f"{t('escalate.unavailable.title')}\n\n"
+                f"{t('escalate.unavailable.body')}"
+            )
+        else:
+            body = (
+                f"{t('escalate.emergency.title')}\n\n"
+                f"{t('escalate.emergency.body')}\n\n"
+                f"{t('escalate.emergency.footer')}"
+            )
         self.transcript.append(Turn("system", body))
         return {
             "state": self.state.value,

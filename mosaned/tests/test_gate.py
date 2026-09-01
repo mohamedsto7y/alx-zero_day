@@ -1,5 +1,5 @@
 """The gate is the safety spine. These tests are the ones that matter."""
-from mosaned.domain import FreeConcern, SessionState
+from mosaned.domain import FreeConcern, GateAssessment, SessionState
 from mosaned.engine.gate import run_gate
 from mosaned.engine.session import IntakeSession
 from mosaned.providers.stub import StubProvider
@@ -7,21 +7,19 @@ from mosaned.providers.stub import StubProvider
 
 class AlwaysConcerned(StubProvider):
     """A model that finds nothing on the fixed list but is worried anyway."""
-    def sense_flags(self, message, flags):
-        return {f.id: False for f in flags}
-
-    def free_concern(self, message):
-        return FreeConcern(concerned=True, reason="something about this worries me")
+    def assess(self, message, flags):
+        return GateAssessment(
+            present_flag_ids=[],
+            free_concern=FreeConcern(True, "something about this worries me"),
+        )
 
 
 class SilentProvider(StubProvider):
-    """A model that never volunteers a concern of its own."""
-    def free_concern(self, message):
-        return FreeConcern(concerned=False)
+    """A model that reads the list but never volunteers a concern of its own."""
 
 
-class BrokenConcern(StubProvider):
-    def free_concern(self, message):
+class BrokenProvider(StubProvider):
+    def assess(self, message, flags):
         raise RuntimeError("provider down")
 
 
@@ -44,10 +42,37 @@ def test_list_alone_escalates_when_model_is_silent():
     assert result.escalate
 
 
-def test_provider_failure_does_not_weaken_the_list():
-    result = run_gate("I have crushing chest pain", BrokenConcern(), turn=1)
+def test_unreadable_message_fails_closed():
+    """If we cannot read a message for danger, we stop. An unread message is
+    not a safe message -- we cannot tell a cough from a stroke."""
+    result = run_gate("I have crushing chest pain", BrokenProvider(), turn=1)
+    assert result.read_failed
     assert result.escalate
-    assert result.free_concern is None
+
+
+def test_degraded_halt_does_not_claim_an_emergency_was_found():
+    """Telling a worried person we found something when we found nothing is a
+    lie; telling them we could not check is the truth."""
+    session = IntakeSession(_provider=BrokenProvider())
+    result = session.send("I have a mild headache")
+    assert session.state is SessionState.ESCALATED
+    assert "can't check this properly" in result["reply"]
+    assert "emergency department now" not in result["reply"]
+
+
+def test_a_transient_failure_is_retried_before_halting():
+    class FlakyOnce(StubProvider):
+        calls = 0
+
+        def assess(self, message, flags):
+            FlakyOnce.calls += 1
+            if FlakyOnce.calls == 1:
+                raise RuntimeError("blip")
+            return super().assess(message, flags)
+
+    result = run_gate("I have a mild headache", FlakyOnce(), turn=1)
+    assert not result.read_failed
+    assert not result.escalate
 
 
 def test_urgent_flag_alone_does_not_escalate():
