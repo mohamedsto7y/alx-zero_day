@@ -73,11 +73,12 @@ class JSONProviderBase:
         question = str(raw.get("question", "")).strip()
         return question or f"Can you tell me about {slot.about}?"
 
-    def extract(self, message: str, slots: list[Slot]) -> dict[str, Any]:
+    def extract(self, message: str, slots: list[Slot], asked: str = "",
+                answering: str = "") -> dict[str, Any]:
         raw = self._timed(
             "extract",
             prompts.EXTRACT_SYSTEM,
-            prompts.extract_prompt(message, slots),
+            prompts.extract_prompt(message, slots, asked, answering),
             prompts.extract_schema(slots),
         )
         allowed = {s.id for s in slots}

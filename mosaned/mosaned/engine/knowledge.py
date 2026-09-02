@@ -40,6 +40,7 @@ def answer(question: str, provider: LLMProvider) -> KnowledgeAnswer:
         return _decline()
 
     if not result.usable:
+        _explain("nothing usable came back (no text, or no sources at all)", result)
         return _decline()
 
     # A citation we did not sanction is not a citation. Keep only sources on
@@ -47,6 +48,12 @@ def answer(question: str, provider: LLMProvider) -> KnowledgeAnswer:
     # we decline rather than show an uncited medical claim.
     kept = [s for s in result.sources if _from_allowed_domain(s.url, allowed)]
     if not kept:
+        _explain(
+            f"{len(result.sources)} source(s) found, none on the allowed domains "
+            f"({', '.join(allowed)}): "
+            + ", ".join(s.url for s in result.sources[:4]),
+            result,
+        )
         return _decline()
 
     return KnowledgeAnswer(text=result.text, sources=kept, grounded=True)
@@ -64,3 +71,11 @@ def render(result: KnowledgeAnswer) -> str:
         return result.text
     cited = " · ".join(s.title for s in result.sources[:3])
     return f"{result.text}\n\n{t('knowledge.sources', sources=cited)}"
+
+
+def _explain(why: str, result: KnowledgeAnswer) -> None:
+    """Say why an answer was refused, when debugging. A silent decline looks
+    identical whether the search found nothing or we threw away everything it
+    found, and those need opposite fixes."""
+    if settings.debug_timing:
+        print(f"    [no answer: {why}]", flush=True)

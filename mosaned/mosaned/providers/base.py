@@ -27,7 +27,8 @@ class LLMProvider(Protocol):
     def phrase_question(self, slot: Slot, complaint: str, already_asked: list[str]) -> str:
         """Word the next question naturally. Free text, but only ever a question."""
 
-    def extract(self, message: str, slots: list[Slot]) -> dict[str, Any]:
+    def extract(self, message: str, slots: list[Slot], asked: str = "",
+                answering: str = "") -> dict[str, Any]:
         """Pull every field this message answers into the named schema."""
 
     def propose_specialty(self, summary: str, specialties: list[str]) -> str:

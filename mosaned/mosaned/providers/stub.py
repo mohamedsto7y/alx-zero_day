@@ -74,7 +74,8 @@ class StubProvider:
     def phrase_question(self, slot: Slot, complaint: str, already_asked: list[str]) -> str:
         return f"Can you tell me about {slot.about}?"
 
-    def extract(self, message: str, slots: list[Slot]) -> dict[str, Any]:
+    def extract(self, message: str, slots: list[Slot], asked: str = "",
+                answering: str = "") -> dict[str, Any]:
         # Assigns the whole message to the first slot asked for. Enough to drive
         # the loop deterministically; nothing like real extraction.
         return {slots[0].id: message.strip()} if slots and message.strip() else {}

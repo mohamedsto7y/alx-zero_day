@@ -152,11 +152,31 @@ def extract_schema(slots: list[Slot]) -> dict[str, Any]:
     }
 
 
-def extract_prompt(message: str, slots: list[Slot]) -> str:
+def extract_prompt(message: str, slots: list[Slot], asked: str = "",
+                   answering: str = "") -> str:
+    """A reply is meaningless without its question. "no i dont" answers
+    whichever field was just asked about; handed over on its own it answers
+    nothing, and the patient gets asked again -- which is exactly what happened.
+    """
     lines = "\n".join(f"- {s.id}: {s.about}" for s in slots)
+    context = ""
+    if asked:
+        context = (
+            f"You have just asked the patient:\n\"\"\"{asked}\"\"\"\n"
+            f"Their reply below is most likely an answer to that"
+        )
+        if answering:
+            context += f", which is the field `{answering}`"
+        context += (
+            ". Short replies such as \"no\", \"yes\", \"i don't know\" or "
+            "\"sometimes\" are real answers to it -- record them as given. "
+            "Only leave the field empty if the reply genuinely does not "
+            "address the question at all.\n\n"
+        )
     return (
-        f"Patient message:\n\"\"\"{message}\"\"\"\n\n"
-        f"Fields you may fill (only those this message answers):\n{lines}"
+        f"{context}"
+        f"Patient reply:\n\"\"\"{message}\"\"\"\n\n"
+        f"Fields you may fill (only those this reply answers):\n{lines}"
     )
 
 

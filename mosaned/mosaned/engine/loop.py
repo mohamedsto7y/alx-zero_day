@@ -124,7 +124,7 @@ def pertinent_negatives(history: StructuredHistory, flow: dict) -> list[str]:
         if not slot.critical:
             continue
         answer = str(values.get(slot.id, "")).strip().lower()
-        if answer and _is_denial(answer):
+        if answer and is_denial(answer):
             negatives.append(slot.id)
     return negatives
 
@@ -134,8 +134,8 @@ _DENIALS = {
 }
 
 
-def _is_denial(answer: str) -> bool:
+def is_denial(answer: str) -> bool:
     """True when the answer opens with a denial. Compares the first word so
     that 'no', 'no,' and 'no.' all read the same."""
-    first = re.split(r"[\s,.;:!]+", answer, maxsplit=1)[0]
+    first = re.split(r"[\s,.;:!]+", (answer or "").strip().lower(), maxsplit=1)[0]
     return first in _DENIALS

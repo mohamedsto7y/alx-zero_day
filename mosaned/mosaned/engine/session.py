@@ -132,7 +132,11 @@ class IntakeSession:
         ]
         if open_slots:
             try:
-                extracted = self._provider.extract(message, open_slots)
+                extracted = self._provider.extract(
+                    message, open_slots,
+                    asked=self.asked[-1] if self.asked else "",
+                    answering=self.pending_slot_id or "",
+                )
             except Exception:
                 extracted = {}
             loop_mod.record(self.history, self.flow, extracted)
@@ -187,6 +191,19 @@ class IntakeSession:
             return False
         if self.slot_attempts.get(pending, 0) < 2:
             return False
+
+        # Belt and braces. If extraction missed it but the patient plainly said
+        # no, record the denial rather than filing them as unsure. Being told
+        # "I've noted you're not sure" after saying no twice is the kind of
+        # thing that ends a conversation, and it happened.
+        last = next(
+            (turn.text for turn in reversed(self.transcript) if turn.role == "patient"),
+            "",
+        )
+        if loop_mod.is_denial(last):
+            loop_mod.record(self.history, self.flow, {pending: last.strip()})
+            return False
+
         if pending not in self.history.not_known:
             self.history.not_known.append(pending)
         return True

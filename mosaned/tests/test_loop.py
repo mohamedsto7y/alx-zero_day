@@ -158,3 +158,35 @@ def test_moving_on_is_acknowledged():
             break
         replies.append(session.send("i dont know")["reply"])
     assert any("noted you're not sure" in r for r in replies)
+
+
+def test_a_denial_is_never_filed_as_uncertainty():
+    """"I told you I don't have it, I didn't say I'm not sure" -- a real
+    patient, rightly furious. Even when extraction misses, a plain "no" is
+    recorded as a denial, never as "not sure"."""
+    session = IntakeSession(_provider=CannotExtract())
+    session.send("I have a cough")
+    replies = [session.send("no")["reply"] for _ in range(4)
+               if session.state is SessionState.GATHERING]
+
+    assert not any("not sure" in r for r in replies), \
+        "a denial must never come back as uncertainty"
+    assert not session.history.not_known, "a denial is an answer, not a gap"
+
+
+def test_extraction_is_told_which_question_it_answers():
+    """"no i dont" answers whichever field was just asked about. Handed over
+    alone it answers nothing, and the patient gets asked again."""
+    seen = {}
+
+    class Recording(Quiet):
+        def extract(self, message, slots, asked="", answering=""):
+            seen.update({"asked": asked, "answering": answering})
+            return super().extract(message, slots, asked, answering)
+
+    session = IntakeSession(_provider=Recording())
+    session.send("I have a cough")
+    session.send("no")
+
+    assert seen["asked"], "the question just asked must travel with the reply"
+    assert seen["answering"], "so must the field it belongs to"
