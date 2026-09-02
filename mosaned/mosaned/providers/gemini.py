@@ -160,10 +160,26 @@ class GeminiProvider(JSONProviderBase):
         )
         try:
             body = _post(req)
-        except Exception:
+        except urllib.error.HTTPError as exc:
+            # Swallowing this made a rejected request look identical to a
+            # search that found nothing, and those need opposite fixes.
+            if settings.debug_timing:
+                print(f"    [search rejected: {_explain(exc)}]", flush=True)
+            return KnowledgeAnswer(text="", sources=[], grounded=False)
+        except Exception as exc:
+            if settings.debug_timing:
+                print(f"    [search failed: {type(exc).__name__}: {exc}]", flush=True)
             return KnowledgeAnswer(text="", sources=[], grounded=False)
 
         self._note_provenance(body)
+        if settings.debug_timing:
+            candidates = body.get("candidates") or [{}]
+            meta = candidates[0].get("groundingMetadata") or {}
+            print(
+                f"    [search: {len(meta.get('groundingChunks') or [])} grounding "
+                f"chunks, finish={candidates[0].get('finishReason', '?')}]",
+                flush=True,
+            )
 
         try:
             candidate = body["candidates"][0]

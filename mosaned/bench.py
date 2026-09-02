@@ -118,6 +118,63 @@ def list_models() -> int:
     return 0
 
 
+def probe_answer(question: str) -> int:
+    """Make the grounded-search call on its own and show everything it returns.
+
+    The engine catches failures here and reports "nothing usable", which looks
+    the same whether the request was rejected or the search genuinely found
+    nothing. This prints the difference.
+    """
+    from mosaned.providers import prompts
+
+    payload = {
+        "systemInstruction": {"parts": [{"text": prompts.KNOWLEDGE_SYSTEM}]},
+        "contents": [{"role": "user", "parts": [{"text": question}]}],
+        "tools": [{"google_search": {}}],
+        "generationConfig": {"temperature": 0},
+    }
+    model = settings.gemini_answer_model
+    print(f"asking {model}: {question!r}\n")
+
+    req = urllib.request.Request(
+        ENDPOINT.format(model=model),
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json",
+                 "x-goog-api-key": settings.gemini_api_key},
+    )
+    start = time.perf_counter()
+    try:
+        with urllib.request.urlopen(req, timeout=180) as resp:
+            body = json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        detail = exc.read().decode("utf-8", "replace")
+        print(f"REJECTED after {time.perf_counter() - start:.1f}s -- HTTP {exc.code}")
+        print(detail[:1200])
+        return 1
+    except Exception as exc:
+        print(f"FAILED after {time.perf_counter() - start:.1f}s: {type(exc).__name__}: {exc}")
+        return 1
+
+    print(f"ok in {time.perf_counter() - start:.1f}s, served by "
+          f"{body.get('modelVersion', '?')}\n")
+    candidate = (body.get("candidates") or [{}])[0]
+    text = "".join(p.get("text", "") for p in
+                   (candidate.get("content") or {}).get("parts", []))
+    meta = candidate.get("groundingMetadata") or {}
+    chunks = meta.get("groundingChunks") or []
+
+    print(f"finishReason    : {candidate.get('finishReason', '?')}")
+    print(f"text returned   : {len(text)} chars")
+    print(f"grounding chunks: {len(chunks)}")
+    for chunk in chunks[:6]:
+        web = chunk.get("web") or {}
+        print(f"   - {web.get('title', '?')}  {web.get('uri', '?')[:80]}")
+    if not chunks:
+        print("   (none -- so the answer path has nothing to cite and declines)")
+    print(f"\n--- answer ---\n{text[:900]}")
+    return 0
+
+
 def main() -> int:
     if not settings.gemini_api_key:
         print("GEMINI_API_KEY is not set (check .env)")
@@ -125,6 +182,11 @@ def main() -> int:
 
     if "--models" in sys.argv:
         return list_models()
+
+    if "--answer" in sys.argv:
+        question = " ".join(sys.argv[sys.argv.index("--answer") + 1:]) or \
+            "is ibuprofen safe with blood pressure tablets"
+        return probe_answer(question)
 
     model = settings.gemini_model
     # Three repeats of the config the intake actually uses, because one sample
