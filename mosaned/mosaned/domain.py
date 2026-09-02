@@ -113,7 +113,8 @@ class GateResult:
 @dataclass(frozen=True)
 class Slot:
     id: str
-    about: str
+    about: str          # how the topic is described TO THE MODEL
+    ask: str = ""       # how the question is put TO THE PATIENT
     critical: bool = False
     type: str = "text"
     ask_if: dict[str, Any] | None = None
@@ -140,6 +141,9 @@ class StructuredHistory:
     background: dict[str, Any] = field(default_factory=dict)
     derived: dict[str, Any] = field(default_factory=dict)
     pertinent_negatives: list[str] = field(default_factory=list)
+    # Asked, and the patient could not say. Real information for the doctor,
+    # and the reason the intake does not ask a third time.
+    not_known: list[str] = field(default_factory=list)
     red_flags_fired: list[FiredFlag] = field(default_factory=list)
     care_level: CareLevel = CareLevel.ROUTINE
     suggested_specialty: str = ""
@@ -150,7 +154,8 @@ class StructuredHistory:
     # Which fields a patient may see. Anything absent is clinician-only.
     _PATIENT_VISIBLE = {
         "presenting_complaint_raw", "presenting_complaint_category", "hpi",
-        "background", "derived", "pertinent_negatives", "red_flags_fired",
+        "background", "derived", "pertinent_negatives", "not_known",
+        "red_flags_fired",
         "care_level", "suggested_specialty", "routing_reason", "created_at",
     }
 

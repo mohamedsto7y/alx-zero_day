@@ -107,3 +107,54 @@ def test_inapplicable_slot_is_never_offered_for_extraction():
     session.send("it is completely dry")
     filled = {**session.history.hpi, **session.history.background}
     assert "sputum" not in filled
+
+
+class CannotExtract(Quiet):
+    """Matches what a real model does with "i dont know": it fills nothing.
+    The stub's default would record the phrase itself as the answer, which
+    hides the very loop this is about."""
+    def extract(self, message, slots):
+        return {}
+
+
+def test_i_dont_know_does_not_loop_forever():
+    """People say "I don't know" constantly. Asking again until the turn limit
+    is not a conversation."""
+    session = IntakeSession(_provider=CannotExtract())
+    session.send("I have a cough")
+    asked = []
+    for _ in range(8):
+        if session.state is not SessionState.GATHERING:
+            break
+        result = session.send("i dont know")
+        asked.append(result.get("awaiting"))
+
+    # No slot is asked more than twice before we accept they cannot say.
+    for slot_id in set(asked):
+        assert asked.count(slot_id) <= 2, f"{slot_id} was asked {asked.count(slot_id)} times"
+    assert session.history.not_known, "unanswerable slots should be recorded"
+
+
+def test_not_knowing_is_recorded_for_the_doctor():
+    """"Patient could not say" is real clinical information, not a gap."""
+    session = IntakeSession(_provider=CannotExtract())
+    session.send("I have a cough")
+    for _ in range(6):
+        if session.state is not SessionState.GATHERING:
+            break
+        session.send("i dont know")
+
+    view = session.history.to_patient_view()
+    assert "not_known" in view
+    assert session.history.not_known
+
+
+def test_moving_on_is_acknowledged():
+    session = IntakeSession(_provider=CannotExtract())
+    session.send("I have a cough")
+    replies = []
+    for _ in range(5):
+        if session.state is not SessionState.GATHERING:
+            break
+        replies.append(session.send("i dont know")["reply"])
+    assert any("noted you're not sure" in r for r in replies)

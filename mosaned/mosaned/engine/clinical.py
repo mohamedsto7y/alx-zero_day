@@ -40,6 +40,7 @@ def _slots(entries: list[dict[str, Any]], *, background: bool) -> list[Slot]:
         Slot(
             id=e["id"],
             about=e["about"],
+            ask=e.get("ask", ""),
             critical=bool(e.get("critical")),
             type=e.get("type", "text"),
             ask_if=e.get("ask_if"),

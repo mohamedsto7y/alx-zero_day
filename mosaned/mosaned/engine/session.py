@@ -25,9 +25,14 @@ class UnreviewedClinicalData(RuntimeError):
 
 def _plain_question(slot) -> str:
     """The flow's own wording, used when we aren't spending a model call on
-    phrasing. A flow may carry an explicit `ask`; otherwise the slot's topic
-    reads well enough on its own."""
-    return t("ask.template", topic=slot.about)
+    phrasing.
+
+    A slot's `about` describes the topic to the model and is written in the
+    third person -- read straight to a patient it produces "whether they have a
+    fever", which is nobody's idea of a companion. `ask` is the patient-facing
+    wording; the template is only a fallback for slots that lack one.
+    """
+    return slot.ask or t("ask.template", topic=slot.about)
 
 
 @dataclass
@@ -49,6 +54,7 @@ class IntakeSession:
     turn_count: int = 0
     complaint_established: bool = False
     pending_slot_id: str | None = None
+    slot_attempts: dict[str, int] = field(default_factory=dict)
     _provider: LLMProvider = field(default=None, repr=False)  # type: ignore[assignment]
 
     def __post_init__(self) -> None:
@@ -134,6 +140,11 @@ class IntakeSession:
         loop_mod.apply_derivations(self.history, self.flow)
         loop_mod.apply_clinician_notes(self.history, self.flow)
 
+        # 4b. If we asked something and still don't have it, that is an answer
+        # too. Ask once more, then record that they could not say and move on:
+        # a patient who does not know cannot be made to know by repetition.
+        moved_on = self._retire_unanswered_slot()
+
         # 5. Next question, or finish.
         if self.turn_count >= settings.max_turns:
             return self._complete()
@@ -151,12 +162,34 @@ class IntakeSession:
             except Exception:
                 pass
 
+        if moved_on:
+            question = f"{t('ask.moving_on')} {question}"
+
         self.asked.append(question)
+        self.slot_attempts[slot.id] = self.slot_attempts.get(slot.id, 0) + 1
         self.pending_slot_id = slot.id
         self.transcript.append(Turn("system", question))
         return {"state": self.state.value, "reply": question, "awaiting": slot.id}
 
     # ---- internals -------------------------------------------------------
+
+    def _retire_unanswered_slot(self) -> bool:
+        """Stop asking a question the patient cannot answer.
+
+        Returns True when a slot was retired, so the next question can
+        acknowledge it rather than ploughing on as if nothing happened.
+        """
+        pending = self.pending_slot_id
+        if not pending:
+            return False
+        filled = {**self.history.hpi, **self.history.background}
+        if str(filled.get(pending, "")).strip():
+            return False
+        if self.slot_attempts.get(pending, 0) < 2:
+            return False
+        if pending not in self.history.not_known:
+            self.history.not_known.append(pending)
+        return True
 
     def _gate_context(self, turns: int = 6) -> str:
         """What the gate needs to judge the newest message. Without it the gate

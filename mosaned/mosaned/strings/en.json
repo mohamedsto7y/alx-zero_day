@@ -26,5 +26,6 @@
   "knowledge.sources": "Source: {sources}",
   "knowledge.not_about_you": "That's general information. The doctor you see can tell you what it means for you specifically.",
   "fork.both_acknowledged": "I'll come back to your question — first let me understand what's going on, so whoever sees you has the full picture.",
-  "escalate.emergency.repeat": "I can't help you book for this. Please go to the nearest emergency department now, or call 123."
+  "escalate.emergency.repeat": "I can't help you book for this. Please go to the nearest emergency department now, or call 123.",
+  "ask.moving_on": "That's alright — I've noted you're not sure."
 }

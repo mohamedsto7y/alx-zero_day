@@ -36,12 +36,19 @@ def applicable(slot: Slot, filled: dict[str, Any]) -> bool:
 
 
 def next_slot(flow: dict, history: StructuredHistory) -> Slot | None:
-    """The next unanswered critical slot, or None when the history is complete."""
+    """The next unanswered critical slot, or None when the history is complete.
+
+    Slots the patient has already said they cannot answer are skipped. Without
+    that, "I don't know" leaves the conversation asking the same question until
+    it hits the turn limit -- and people say "I don't know" constantly.
+    """
     filled = {**history.hpi, **history.background}
     for slot in [*flow["slots"], *flow["background"]]:
         if not slot.critical:
             continue
         if slot.id in filled and str(filled[slot.id]).strip():
+            continue
+        if slot.id in history.not_known:
             continue
         if not applicable(slot, filled):
             continue
