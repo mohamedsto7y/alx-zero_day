@@ -142,11 +142,14 @@ def main() -> int:
         seconds, status = call(m, think, schema)
         print(f"  {seconds:7.1f}s  {status:9} {label}")
 
-    print("\n`served=` is what Google says answered. It comes from the response")
-    print("body, so it is proof a real request reached them.\n")
-    print("All rows slow  -> account, region or network, not thinking.")
-    print("Only HIGH slow -> thinking was the cost; LOW is the fix.")
-    print("Only 3.7 slow  -> that model is queued on your tier; try 2.5-flash.")
+    print("\n`served=` is what Google says answered, read from the response body.")
+    print("`think=` should be 0; anything else means LOW is not taking effect.\n")
+    print("Sub-second and tight    -> healthy. Two calls per message.")
+    print("Slow but consistent     -> try `bench.py --models` to time the round")
+    print("                           trip; that call runs no inference.")
+    print("Fast then suddenly slow -> you are over the daily quota and being")
+    print("                           deprioritised. Switch GEMINI_MODEL.")
+    print("HTTP 429                -> quota gone for that model today.")
     return 0
 
 
