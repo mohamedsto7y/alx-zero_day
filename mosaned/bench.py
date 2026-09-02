@@ -82,12 +82,28 @@ def list_models() -> int:
         "https://generativelanguage.googleapis.com/v1beta/models?pageSize=200",
         headers={"x-goog-api-key": settings.gemini_api_key},
     )
-    try:
-        with urllib.request.urlopen(req, timeout=60) as resp:
-            body = json.loads(resp.read().decode("utf-8"))
-    except Exception as exc:
-        print(f"could not list models: {exc}")
-        return 1
+    # Timed three times. This endpoint costs no generate quota and does no
+    # inference, so its time is almost purely the round trip to Google. If
+    # THIS is slow, the problem is the route from this machine, not the model.
+    times = []
+    body = {}
+    for _ in range(3):
+        start = time.perf_counter()
+        try:
+            with urllib.request.urlopen(req, timeout=60) as resp:
+                body = json.loads(resp.read().decode("utf-8"))
+            times.append(time.perf_counter() - start)
+        except Exception as exc:
+            print(f"could not list models: {exc}")
+            return 1
+
+    print("round trip to Google, no inference involved:")
+    print("  " + "  ".join(f"{t:.2f}s" for t in times))
+    if min(times) > 3:
+        print("  -> the network path from this machine is the bottleneck,")
+        print("     not the model. Inference is not involved in this call.\n")
+    else:
+        print("  -> the network is fine; slowness is in the generate path.\n")
 
     usable = [
         m for m in body.get("models", [])
@@ -111,12 +127,14 @@ def main() -> int:
         return list_models()
 
     model = settings.gemini_model
+    # Three repeats of the config the intake actually uses, because one sample
+    # of a variable thing is not a measurement.
     rows = [
-        (model, None,     False, "default thinking, plain"),
-        (model, "LOW",     False, "LOW thinking, plain"),
-        (model, "LOW",     True,  "LOW thinking + responseSchema"),
-        (model, "HIGH",    False, "HIGH thinking, plain"),
-        ("gemini-2.5-flash", None, False, "older model, default"),
+        (model, "LOW",  True,  "LOW + responseSchema (what intake uses)"),
+        (model, "LOW",  True,  "  same again"),
+        (model, "LOW",  True,  "  same again"),
+        (model, "LOW",  False, "LOW thinking, plain"),
+        (model, None,   False, "default thinking, plain"),
     ]
 
     print(f"key ...{settings.gemini_api_key[-4:]}   model {model}\n")
