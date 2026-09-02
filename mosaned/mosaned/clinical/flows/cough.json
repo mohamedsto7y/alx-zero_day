@@ -1,0 +1,195 @@
+{
+  "id": "cough",
+  "version": "0.2",
+  "label": "Cough",
+  "authored_by": "founder (clinical)",
+  "note": "First authored flow, from the original handoff. Its original emergency_gate entries are all covered by the universal gate (severe breathlessness, crushing chest pain, significant haemoptysis, cyanosis, cannot speak in full sentences, choking) and its red_flag_review entries by the universal 'urgent' flags, so they are not duplicated here.",
+  "slots": [
+    {
+      "id": "duration",
+      "critical": true,
+      "about": "how many days or weeks the cough has been going on",
+      "type": "text",
+      "derive": {
+        "field": "duration_category",
+        "rules": [
+          {
+            "under_weeks": 3,
+            "value": "acute"
+          },
+          {
+            "under_weeks": 8,
+            "value": "subacute"
+          },
+          {
+            "else": "chronic"
+          }
+        ]
+      },
+      "ask": "How many days or weeks have you had the cough?"
+    },
+    {
+      "id": "dry_or_productive",
+      "critical": true,
+      "about": "whether the cough is dry or brings up phlegm",
+      "type": "text",
+      "ask": "Is it a dry cough, or are you bringing up phlegm?"
+    },
+    {
+      "id": "sputum",
+      "critical": true,
+      "about": "the colour of the phlegm, and whether there has been any blood in it",
+      "type": "text",
+      "ask_if": {
+        "slot": "dry_or_productive",
+        "contains": [
+          "phlegm",
+          "productive",
+          "sputum",
+          "mucus",
+          "wet",
+          "bringing up"
+        ]
+      },
+      "ask": "What colour is the phlegm, and have you seen any blood in it?"
+    },
+    {
+      "id": "timing",
+      "critical": true,
+      "about": "whether it is worse at night, when lying down, or with exercise",
+      "type": "text",
+      "ask": "Is it worse at any particular time, or in any position?"
+    },
+    {
+      "id": "fever",
+      "critical": true,
+      "about": "whether they have a fever or feel hot and shivery",
+      "type": "text",
+      "ask": "Do you have a fever, or feel hot and shivery?"
+    },
+    {
+      "id": "breathless",
+      "critical": true,
+      "about": "whether they feel short of breath at all, and when",
+      "type": "text",
+      "ask": "Do you feel short of breath at all? If so, when?"
+    },
+    {
+      "id": "associated",
+      "critical": true,
+      "about": "chest pain, wheeze, unintended weight loss, night sweats, or heartburn",
+      "type": "text",
+      "ask": "Has anything else come with it — fever, vomiting, weight loss, anything?"
+    }
+  ],
+  "background": [
+    {
+      "id": "smoking",
+      "critical": true,
+      "about": "whether they smoke or used to, and roughly how much",
+      "type": "text",
+      "ask": "Do you smoke, or did you used to? Roughly how much?"
+    },
+    {
+      "id": "conditions",
+      "critical": true,
+      "about": "known asthma, COPD, heart conditions, or other ongoing illnesses",
+      "type": "text",
+      "ask": "Do you have any ongoing or past medical conditions?"
+    },
+    {
+      "id": "medications",
+      "critical": true,
+      "about": "any regular medicines they take",
+      "type": "text",
+      "ask": "Are you taking any regular medicines?"
+    },
+    {
+      "id": "allergies",
+      "critical": true,
+      "about": "any drug allergies",
+      "type": "text",
+      "ask": "Do you have any drug allergies?"
+    }
+  ],
+  "clinician_note_rules": [
+    {
+      "when_slot_contains": {
+        "slot": "medications",
+        "any_of": [
+          "ace inhibitor",
+          "lisinopril",
+          "enalapril",
+          "ramipril",
+          "captopril",
+          "perindopril",
+          "zestril",
+          "tritace"
+        ]
+      },
+      "note": "Patient is on an ACE inhibitor. Consider drug-induced cough."
+    },
+    {
+      "when_slot_contains": {
+        "slot": "sputum",
+        "any_of": [
+          "blood",
+          "red",
+          "streak",
+          "haemoptysis",
+          "hemoptysis"
+        ]
+      },
+      "note": "Patient reports blood in sputum. TB and malignancy warrant consideration."
+    },
+    {
+      "when_slot_equals": {
+        "slot": "duration_category",
+        "value": "chronic"
+      },
+      "note": "Chronic cough (over 8 weeks). TB, malignancy, asthma, reflux and ACE inhibitor use warrant consideration."
+    },
+    {
+      "when_flag_fired": "persistent_cough",
+      "note": "Cough over three weeks. Consider chest imaging and TB screening per local protocol."
+    },
+    {
+      "when_flag_fired": "haemoptysis_minor",
+      "note": "Blood-streaked sputum reported. TB and malignancy warrant consideration; consider chest imaging and TB screening per local protocol."
+    }
+  ],
+  "routing": {
+    "default_specialty": "pulmonology",
+    "rules": [
+      {
+        "when": {
+          "all_of": [
+            {
+              "slot_equals": {
+                "slot": "duration_category",
+                "value": "acute"
+              }
+            },
+            {
+              "no_urgent_flags": true
+            }
+          ]
+        },
+        "specialty": "internal_medicine",
+        "care_level": "routine",
+        "reason": "acute cough with no red flags"
+      },
+      {
+        "when": {
+          "slot_equals": {
+            "slot": "duration_category",
+            "value": "chronic"
+          }
+        },
+        "specialty": "pulmonology",
+        "care_level": "urgent",
+        "reason": "chronic cough"
+      }
+    ]
+  }
+}

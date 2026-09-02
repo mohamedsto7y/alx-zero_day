@@ -1,0 +1,41 @@
+{
+  "version": "0.1",
+  "note": "Specialties as they exist in Egyptian private practice. The model may only propose a specialty from this list. Hard overrides run first and cannot be overturned by the model.",
+  "specialties": [
+    "internal_medicine",
+    "pulmonology",
+    "cardiology",
+    "gastroenterology",
+    "neurology",
+    "ent",
+    "dermatology",
+    "orthopedics",
+    "urology",
+    "obstetrics_gynecology",
+    "pediatrics",
+    "ophthalmology",
+    "endocrinology",
+    "psychiatry",
+    "general_surgery",
+    "rheumatology",
+    "nephrology",
+    "vascular_surgery",
+    "emergency"
+  ],
+  "default": "internal_medicine",
+  "hard_overrides": [
+    {"when_flag_category": "cardiac", "specialty": "cardiology", "reason": "cardiac red flag present"},
+    {"when_flag_category": "neurological", "specialty": "neurology", "reason": "neurological red flag present"},
+    {"when_flag_category": "obstetric", "specialty": "obstetrics_gynecology", "reason": "obstetric red flag present"},
+    {"when_flag_category": "psychiatric", "specialty": "psychiatry", "reason": "psychiatric red flag present"},
+    {"when_flag_category": "haemorrhage", "specialty": "general_surgery", "reason": "bleeding red flag present"},
+    {"when_flag_category": "sepsis", "specialty": "internal_medicine", "reason": "sepsis red flag present"},
+    {"when_flag_category": "anaphylaxis", "specialty": "emergency", "reason": "anaphylaxis red flag present"},
+    {"when_flag_category": "trauma", "specialty": "emergency", "reason": "trauma red flag present"},
+    {"when_flag_category": "paediatric", "specialty": "pediatrics", "reason": "paediatric red flag present"},
+    {"when_flag_category": "respiratory", "specialty": "pulmonology", "reason": "respiratory red flag present"},
+    {"when_flag_category": "urological", "specialty": "urology", "reason": "urological red flag present"},
+    {"when_flag_category": "gynaecological", "specialty": "obstetrics_gynecology", "reason": "gynaecological red flag present"},
+    {"when_flag_category": "abdominal", "specialty": "general_surgery", "reason": "abdominal red flag present"}
+  ]
+}

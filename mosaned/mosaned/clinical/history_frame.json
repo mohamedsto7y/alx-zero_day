@@ -1,0 +1,115 @@
+{
+  "id": "generic",
+  "version": "0.1",
+  "label": "Generic clinical history",
+  "note": "Runs for any complaint with no authored flow. Slot order is the order the engine prefers to fill them, but it always skips slots the patient has already answered.",
+  "slots": [
+    {
+      "id": "onset",
+      "critical": true,
+      "about": "when it started and how long it has been going on",
+      "type": "text",
+      "ask": "When did it start, and how long has it been going on?"
+    },
+    {
+      "id": "site",
+      "critical": true,
+      "about": "where in the body the problem is, if it has a location",
+      "type": "text",
+      "ask": "Where in your body is it?"
+    },
+    {
+      "id": "character",
+      "critical": true,
+      "about": "what it feels like in their own words",
+      "type": "text",
+      "ask": "How would you describe what it feels like?"
+    },
+    {
+      "id": "severity",
+      "critical": true,
+      "about": "how bad it is, out of ten, and whether it stops them doing things",
+      "type": "text",
+      "ask": "How bad is it, out of ten — and is it stopping you doing things?"
+    },
+    {
+      "id": "progression",
+      "critical": true,
+      "about": "whether it is getting better, worse, or staying the same",
+      "type": "text",
+      "ask": "Is it getting better, getting worse, or staying about the same?"
+    },
+    {
+      "id": "associated",
+      "critical": true,
+      "about": "any other symptoms that came with it, such as fever, vomiting, or weight loss",
+      "type": "text",
+      "ask": "Has anything else come with it — fever, vomiting, weight loss, anything?"
+    },
+    {
+      "id": "radiation",
+      "critical": false,
+      "about": "whether it spreads anywhere else",
+      "type": "text",
+      "ask": "Does it spread anywhere else?"
+    },
+    {
+      "id": "timing",
+      "critical": false,
+      "about": "whether it is worse at any particular time or in any position",
+      "type": "text",
+      "ask": "Is it worse at any particular time, or in any position?"
+    },
+    {
+      "id": "aggravating",
+      "critical": false,
+      "about": "what makes it worse",
+      "type": "text",
+      "ask": "Does anything make it worse?"
+    },
+    {
+      "id": "relieving",
+      "critical": false,
+      "about": "what makes it better, and anything already tried",
+      "type": "text",
+      "ask": "Does anything make it better? Have you tried anything for it?"
+    }
+  ],
+  "background": [
+    {
+      "id": "medications",
+      "critical": true,
+      "about": "any regular medicines they take",
+      "type": "text",
+      "ask": "Are you taking any regular medicines?"
+    },
+    {
+      "id": "allergies",
+      "critical": true,
+      "about": "any drug allergies",
+      "type": "text",
+      "ask": "Do you have any drug allergies?"
+    },
+    {
+      "id": "conditions",
+      "critical": false,
+      "about": "any ongoing or past medical conditions",
+      "type": "text",
+      "ask": "Do you have any ongoing or past medical conditions?"
+    },
+    {
+      "id": "smoking",
+      "critical": false,
+      "about": "whether they smoke now or used to, and roughly how much",
+      "type": "text",
+      "ask": "Do you smoke, or did you used to? Roughly how much?"
+    },
+    {
+      "id": "pregnancy",
+      "critical": false,
+      "about": "whether they are or might be pregnant, if applicable",
+      "type": "text",
+      "ask": "Are you, or could you be, pregnant?"
+    }
+  ]
+}

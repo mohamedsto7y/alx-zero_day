@@ -1,0 +1,101 @@
+{
+  "_note": "Seeded doctors. Scoring fields carry provenance, not just a value: a claim without a verified source is not a credential. No field here is purchasable and there is no paid-placement field by design.",
+  "doctors": [
+    {
+      "id": "d001", "name": "Dr Nour Abdelrahman", "specialty": "pulmonology",
+      "area": "Nasr City, Cairo", "languages": ["ar", "en"], "consult_fee_egp": 400,
+      "credentials": {
+        "medical_degree": {"value": "MBBCh Cairo University", "verified_source": "Egyptian Medical Syndicate register", "verified_on": "2026-07-14"},
+        "board_certification": {"value": "MD Pulmonary Medicine", "verified_source": "Egyptian Medical Syndicate register", "verified_on": "2026-07-14"},
+        "academic_post": {"value": "Lecturer, Faculty of Medicine", "verified_source": "university staff listing", "verified_on": "2026-07-14"}
+      },
+      "academic_activity": {"peer_reviewed_publications": 11, "verified_source": "PubMed author search", "verified_on": "2026-07-14"},
+      "patient_experience": {"verified_reviews": 34, "mean_rating": 4.7, "source": "post-visit surveys sent only to confirmed bookings"},
+      "accepting_new_patients": true
+    },
+    {
+      "id": "d002", "name": "Dr Karim El-Shazly", "specialty": "pulmonology",
+      "area": "Maadi, Cairo", "languages": ["ar", "en"], "consult_fee_egp": 350,
+      "credentials": {
+        "medical_degree": {"value": "MBBCh Ain Shams University", "verified_source": "Egyptian Medical Syndicate register", "verified_on": "2026-07-20"},
+        "board_certification": {"value": "MSc Chest Diseases", "verified_source": "Egyptian Medical Syndicate register", "verified_on": "2026-07-20"},
+        "academic_post": {"value": "Assistant Lecturer, PhD in progress", "verified_source": "university staff listing", "verified_on": "2026-07-20"}
+      },
+      "academic_activity": {"peer_reviewed_publications": 6, "verified_source": "PubMed author search", "verified_on": "2026-07-20"},
+      "patient_experience": {"verified_reviews": 19, "mean_rating": 4.8, "source": "post-visit surveys sent only to confirmed bookings"},
+      "accepting_new_patients": true
+    },
+    {
+      "id": "d003", "name": "Dr Yasmin Fahmy", "specialty": "internal_medicine",
+      "area": "Heliopolis, Cairo", "languages": ["ar", "en"], "consult_fee_egp": 300,
+      "credentials": {
+        "medical_degree": {"value": "MBBCh Alexandria University", "verified_source": "Egyptian Medical Syndicate register", "verified_on": "2026-08-02"},
+        "board_certification": {"value": "MD Internal Medicine", "verified_source": "Egyptian Medical Syndicate register", "verified_on": "2026-08-02"},
+        "academic_post": {"value": "Lecturer, Faculty of Medicine", "verified_source": "university staff listing", "verified_on": "2026-08-02"}
+      },
+      "academic_activity": {"peer_reviewed_publications": 9, "verified_source": "PubMed author search", "verified_on": "2026-08-02"},
+      "patient_experience": {"verified_reviews": 41, "mean_rating": 4.6, "source": "post-visit surveys sent only to confirmed bookings"},
+      "accepting_new_patients": true
+    },
+    {
+      "id": "d004", "name": "Dr Omar Sabry", "specialty": "cardiology",
+      "area": "Mohandessin, Giza", "languages": ["ar", "en"], "consult_fee_egp": 500,
+      "credentials": {
+        "medical_degree": {"value": "MBBCh Cairo University", "verified_source": "Egyptian Medical Syndicate register", "verified_on": "2026-06-30"},
+        "board_certification": {"value": "MD Cardiology", "verified_source": "Egyptian Medical Syndicate register", "verified_on": "2026-06-30"},
+        "academic_post": {"value": "Lecturer, Faculty of Medicine", "verified_source": "university staff listing", "verified_on": "2026-06-30"}
+      },
+      "academic_activity": {"peer_reviewed_publications": 14, "verified_source": "PubMed author search", "verified_on": "2026-06-30"},
+      "patient_experience": {"verified_reviews": 28, "mean_rating": 4.9, "source": "post-visit surveys sent only to confirmed bookings"},
+      "accepting_new_patients": true
+    },
+    {
+      "id": "d005", "name": "Dr Hala Mansour", "specialty": "gastroenterology",
+      "area": "Dokki, Giza", "languages": ["ar"], "consult_fee_egp": 450,
+      "credentials": {
+        "medical_degree": {"value": "MBBCh Ain Shams University", "verified_source": "Egyptian Medical Syndicate register", "verified_on": "2026-07-05"},
+        "board_certification": {"value": "MD Hepatology and Gastroenterology", "verified_source": "Egyptian Medical Syndicate register", "verified_on": "2026-07-05"},
+        "academic_post": {"value": "Assistant Professor", "verified_source": "university staff listing", "verified_on": "2026-07-05"}
+      },
+      "academic_activity": {"peer_reviewed_publications": 17, "verified_source": "PubMed author search", "verified_on": "2026-07-05"},
+      "patient_experience": {"verified_reviews": 23, "mean_rating": 4.5, "source": "post-visit surveys sent only to confirmed bookings"},
+      "accepting_new_patients": true
+    },
+    {
+      "id": "d006", "name": "Dr Tarek Halim", "specialty": "neurology",
+      "area": "Nasr City, Cairo", "languages": ["ar", "en"], "consult_fee_egp": 450,
+      "credentials": {
+        "medical_degree": {"value": "MBBCh Cairo University", "verified_source": "Egyptian Medical Syndicate register", "verified_on": "2026-08-11"},
+        "board_certification": {"value": "MSc Neurology", "verified_source": "Egyptian Medical Syndicate register", "verified_on": "2026-08-11"},
+        "academic_post": {"value": "Assistant Lecturer, PhD in progress", "verified_source": "university staff listing", "verified_on": "2026-08-11"}
+      },
+      "academic_activity": {"peer_reviewed_publications": 5, "verified_source": "PubMed author search", "verified_on": "2026-08-11"},
+      "patient_experience": {"verified_reviews": 12, "mean_rating": 4.7, "source": "post-visit surveys sent only to confirmed bookings"},
+      "accepting_new_patients": true
+    },
+    {
+      "id": "d007", "name": "Dr Mariam Zaki", "specialty": "dermatology",
+      "area": "Zamalek, Cairo", "languages": ["ar", "en", "fr"], "consult_fee_egp": 400,
+      "credentials": {
+        "medical_degree": {"value": "MBBCh Alexandria University", "verified_source": "Egyptian Medical Syndicate register", "verified_on": "2026-07-28"},
+        "board_certification": {"value": "MD Dermatology", "verified_source": "Egyptian Medical Syndicate register", "verified_on": "2026-07-28"},
+        "academic_post": {"value": "Lecturer, Faculty of Medicine", "verified_source": "university staff listing", "verified_on": "2026-07-28"}
+      },
+      "academic_activity": {"peer_reviewed_publications": 8, "verified_source": "PubMed author search", "verified_on": "2026-07-28"},
+      "patient_experience": {"verified_reviews": 37, "mean_rating": 4.8, "source": "post-visit surveys sent only to confirmed bookings"},
+      "accepting_new_patients": true
+    },
+    {
+      "id": "d008", "name": "Dr Sherif Adel", "specialty": "orthopedics",
+      "area": "Sheikh Zayed, Giza", "languages": ["ar", "en"], "consult_fee_egp": 400,
+      "credentials": {
+        "medical_degree": {"value": "MBBCh Cairo University", "verified_source": "Egyptian Medical Syndicate register", "verified_on": "2026-08-19"},
+        "board_certification": {"value": "MSc Orthopaedic Surgery", "verified_source": "Egyptian Medical Syndicate register", "verified_on": "2026-08-19"},
+        "academic_post": {"value": "Assistant Lecturer, PhD in progress", "verified_source": "university staff listing", "verified_on": "2026-08-19"}
+      },
+      "academic_activity": {"peer_reviewed_publications": 4, "verified_source": "PubMed author search", "verified_on": "2026-08-19"},
+      "patient_experience": {"verified_reviews": 15, "mean_rating": 4.6, "source": "post-visit surveys sent only to confirmed bookings"},
+      "accepting_new_patients": true
+    }
+  ]
+}
