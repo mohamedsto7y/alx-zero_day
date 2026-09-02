@@ -59,6 +59,16 @@ dry", and a safety net that cries wolf is ignored within a day.
 The gate also sees the **conversation**, not just the newest message. "It's
 dry" alone is unjudgeable; as an answer about a three-day cough it is not.
 
+### Free-tier quota
+
+The Gemini free tier's daily cap is `PerProjectPerModel` — **each model has its
+own allowance**. Exhausting one leaves the others untouched, so
+`bench.py --models` lists what the key can reach and `GEMINI_MODEL` switches
+to a fresh bucket. Enabling billing on the project removes the cap entirely.
+
+At two model calls per patient message, a small daily allowance goes quickly:
+budget roughly one conversation per twenty requests.
+
 The gate prompt puts the **flag list first and the conversation last**. That
 list is ~3.5KB and identical on every call, so a runtime that caches a stable
 prefix reuses it for the whole session; in the other order every message pays
@@ -120,6 +130,7 @@ pip install -r requirements.txt
 python run.py            # terminal conversation, deterministic stub, no model
 python -m pytest tests   # 44 tests
 python bench.py          # time raw Gemini calls when a run feels slow
+python bench.py --models # what this key can reach, and their separate quotas
 uvicorn mosaned.main:app --reload
 ```
 

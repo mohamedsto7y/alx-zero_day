@@ -71,10 +71,44 @@ def call(model: str, thinking: str | None, schema: bool) -> tuple[float, str]:
         return time.perf_counter() - start, type(exc).__name__
 
 
+def list_models() -> int:
+    """Ask the key what it can actually reach.
+
+    The daily free-tier quota is per project PER MODEL, so a model you have
+    not spent today still has its full allowance. Guessing names wastes the
+    little quota you have left; this endpoint does not consume it.
+    """
+    req = urllib.request.Request(
+        "https://generativelanguage.googleapis.com/v1beta/models?pageSize=200",
+        headers={"x-goog-api-key": settings.gemini_api_key},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            body = json.loads(resp.read().decode("utf-8"))
+    except Exception as exc:
+        print(f"could not list models: {exc}")
+        return 1
+
+    usable = [
+        m for m in body.get("models", [])
+        if "generateContent" in (m.get("supportedGenerationMethods") or [])
+    ]
+    print(f"{len(usable)} models your key can call with generateContent:\n")
+    for m in sorted(usable, key=lambda m: m["name"]):
+        name = m["name"].removeprefix("models/")
+        print(f"  {name:<44} {m.get('displayName', '')}")
+    print("\nEach has its OWN daily free-tier quota. Set GEMINI_MODEL in .env")
+    print("to one you have not spent today.")
+    return 0
+
+
 def main() -> int:
     if not settings.gemini_api_key:
         print("GEMINI_API_KEY is not set (check .env)")
         return 1
+
+    if "--models" in sys.argv:
+        return list_models()
 
     model = settings.gemini_model
     rows = [
