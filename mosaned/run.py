@@ -9,19 +9,23 @@ from __future__ import annotations
 import json
 import sys
 
-from mosaned.config import settings
 from mosaned.db import connect, seed_doctors, shortlist
 from mosaned.domain import SessionState
 from mosaned.engine.clinical import flags_reviewed_by
 from mosaned.engine.session import IntakeSession
+from mosaned.providers import get_provider
 
 
 def main() -> int:
-    print(f"[provider: {settings.provider} | model: {settings.model}]")
+    # Ask the provider what it is actually going to use. Reading the config
+    # instead printed the Ollama model tag no matter which provider was live,
+    # which is a banner that lies about the thing you most need to trust.
+    provider = get_provider()
+    print(f"[provider: {provider.name} | model: {getattr(provider, 'model', '-')}]")
     if not flags_reviewed_by():
         print("[emergency criteria: NOT YET REVIEWED BY A DOCTOR - development only]\n")
 
-    session = IntakeSession()
+    session = IntakeSession(_provider=provider)
     print(session.open(), "\n")
 
     while session.state is SessionState.GATHERING:
