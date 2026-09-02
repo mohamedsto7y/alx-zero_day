@@ -39,7 +39,15 @@ class Settings:
         "MOSANED_SOURCE_DOMAINS",
         "nhs.uk,msdmanuals.com,who.int,mayoclinic.org,cdc.gov",
     )
-    gemini_model: str = os.getenv("GEMINI_MODEL", "gemini-3.7-flash")
+    # Two jobs, two models. Filling a fixed schema is the lite tier's ideal
+    # case: it is the fastest thing Google serves, and reasoning is not wanted
+    # here anyway. The answer a patient reads is worth a better model.
+    # Pinned versions, not the "-latest" aliases: an alias can change the model
+    # under a safety gate without anyone deciding to, which is exactly the
+    # property we do not want. Splitting them also spreads the per-model daily
+    # quota across two buckets instead of one.
+    gemini_model: str = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
+    gemini_answer_model: str = os.getenv("GEMINI_ANSWER_MODEL", "gemini-3.5-flash")
     # Gemini 3 is a reasoning model and defaults to a higher thinking level.
     # Filling a fixed schema needs no reasoning, and the default made every
     # call take minutes. LOW | MEDIUM | HIGH; empty string leaves it unset.

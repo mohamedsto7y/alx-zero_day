@@ -100,6 +100,7 @@ class GeminiProvider(JSONProviderBase):
     def __init__(self, api_key: str | None = None, model: str | None = None) -> None:
         self.api_key = api_key or settings.gemini_api_key
         self.model = model or settings.gemini_model
+        self.answer_model = settings.gemini_answer_model
         if not self.api_key:
             raise RuntimeError("GEMINI_API_KEY is not set")
 
@@ -151,7 +152,9 @@ class GeminiProvider(JSONProviderBase):
             "generationConfig": {"temperature": 0, **_thinking()},
         }
         req = urllib.request.Request(
-            _ENDPOINT.format(model=self.model),
+            # The answer a patient reads is worth the better model; the
+            # schema-filling calls are not.
+            _ENDPOINT.format(model=self.answer_model),
             data=json.dumps(payload).encode("utf-8"),
             headers={"Content-Type": "application/json", "x-goog-api-key": self.api_key},
         )

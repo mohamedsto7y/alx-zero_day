@@ -64,7 +64,8 @@ dry" alone is unjudgeable; as an answer about a three-day cough it is not.
 The Gemini free tier's daily cap is `PerProjectPerModel` — **each model has its
 own allowance**. Exhausting one leaves the others untouched, so
 `bench.py --models` lists what the key can reach and `GEMINI_MODEL` switches
-to a fresh bucket. Enabling billing on the project removes the cap entirely.
+to a fresh bucket. Structured calls and patient answers use different models,
+which spreads the load across two buckets as well as fitting each job. Enabling billing on the project removes the cap entirely.
 
 At two model calls per patient message, a small daily allowance goes quickly:
 budget roughly one conversation per twenty requests.
@@ -162,7 +163,8 @@ decisions can be tested offline.
 | `OLLAMA_HOST` | `http://localhost:11434` | |
 | `OLLAMA_KEEP_ALIVE` | `30m` | Keeps the model resident between messages |
 | `GEMINI_API_KEY` | — | Free key at aistudio.google.com/apikey |
-| `GEMINI_MODEL` | `gemini-3.7-flash` | |
+| `GEMINI_MODEL` | `gemini-3.5-flash-lite` | Schema-filling: fastest tier |
+| `GEMINI_ANSWER_MODEL` | `gemini-3.5-flash` | Patient-facing answers |
 | `GEMINI_THINKING_LEVEL` | `LOW` | `LOW`/`MEDIUM`/`HIGH`; empty leaves it unset |
 | `ANTHROPIC_API_KEY` | — | |
 | `ANTHROPIC_MODEL` | `claude-haiku-4-5` | |
