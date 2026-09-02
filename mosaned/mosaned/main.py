@@ -6,11 +6,11 @@ from typing import Any
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-from .config import settings
 from .db import book, connect, load_intake, save_intake, seed_doctors, shortlist
 from .domain import SessionState
 from .engine.clinical import flags_reviewed_by
 from .engine.session import IntakeSession, UnreviewedClinicalData
+from .providers import get_provider
 from .strings import t
 
 app = FastAPI(
@@ -49,10 +49,11 @@ def _session(sid: str) -> IntakeSession:
 
 @app.get("/health")
 def health() -> dict[str, Any]:
+    provider = get_provider()
     return {
         "ok": True,
-        "provider": settings.provider,
-        "model": settings.model,
+        "provider": provider.name,
+        "model": getattr(provider, "model", "-"),
         "emergency_flags_reviewed_by": flags_reviewed_by(),
         "safe_for_real_patients": bool(flags_reviewed_by()),
     }
