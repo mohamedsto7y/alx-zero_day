@@ -4,11 +4,11 @@ Structured tasks use responseSchema so the model must answer in the shape we
 asked for. The information path uses the google_search tool, which returns a
 final answer plus groundingMetadata naming what it read.
 
-Note on thinking: Gemini 3 is a reasoning model with a configurable thinking
-level, and lowering it would speed up the schema-filling calls. We leave it
-unset deliberately -- there are reported failures combining thinkingConfig
-with responseSchema, and a nil response on the emergency gate is not a
-trade worth making for latency. Revisit with measurements.
+Note on thinking: Gemini 3 is a reasoning model and defaults to a higher
+thinking level. Leaving it unset made a single patient message take minutes,
+because every call was reasoning its way to filling a fixed schema. We now ask
+for LOW, which the docs describe as near-instant. Raise it with
+GEMINI_THINKING_LEVEL if a task ever needs the deliberation.
 """
 from __future__ import annotations
 
@@ -30,6 +30,12 @@ def _strip_unsupported(schema: dict[str, Any]) -> dict[str, Any]:
     return {k: v for k, v in schema.items() if k != "additionalProperties"}
 
 
+def _thinking() -> dict[str, Any]:
+    """Ask for the configured thinking level, or nothing if it's been cleared."""
+    level = (settings.gemini_thinking or "").strip().upper()
+    return {"thinkingConfig": {"thinkingLevel": level}} if level else {}
+
+
 class GeminiProvider(JSONProviderBase):
     name = "gemini"
 
@@ -47,6 +53,7 @@ class GeminiProvider(JSONProviderBase):
                 "temperature": 0,
                 "responseMimeType": "application/json",
                 "responseSchema": _strip_unsupported(schema),
+                **_thinking(),
             },
         }
         req = urllib.request.Request(
@@ -82,7 +89,7 @@ class GeminiProvider(JSONProviderBase):
                 )}],
             }],
             "tools": [{"google_search": {}}],
-            "generationConfig": {"temperature": 0},
+            "generationConfig": {"temperature": 0, **_thinking()},
         }
         req = urllib.request.Request(
             _ENDPOINT.format(model=self.model),

@@ -119,6 +119,7 @@ pip install -r requirements.txt
 
 python run.py            # terminal conversation, deterministic stub, no model
 python -m pytest tests   # 44 tests
+python bench.py          # time raw Gemini calls when a run feels slow
 uvicorn mosaned.main:app --reload
 ```
 
@@ -151,6 +152,7 @@ decisions can be tested offline.
 | `OLLAMA_KEEP_ALIVE` | `30m` | Keeps the model resident between messages |
 | `GEMINI_API_KEY` | — | Free key at aistudio.google.com/apikey |
 | `GEMINI_MODEL` | `gemini-3.7-flash` | |
+| `GEMINI_THINKING_LEVEL` | `LOW` | `LOW`/`MEDIUM`/`HIGH`; empty leaves it unset |
 | `ANTHROPIC_API_KEY` | — | |
 | `ANTHROPIC_MODEL` | `claude-haiku-4-5` | |
 | `MOSANED_SOURCE_DOMAINS` | `nhs.uk,msdmanuals.com,…` | The only curation the answer path needs |

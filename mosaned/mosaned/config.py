@@ -40,6 +40,10 @@ class Settings:
         "nhs.uk,msdmanuals.com,who.int,mayoclinic.org,cdc.gov",
     )
     gemini_model: str = os.getenv("GEMINI_MODEL", "gemini-3.7-flash")
+    # Gemini 3 is a reasoning model and defaults to a higher thinking level.
+    # Filling a fixed schema needs no reasoning, and the default made every
+    # call take minutes. LOW | MEDIUM | HIGH; empty string leaves it unset.
+    gemini_thinking: str = os.getenv("GEMINI_THINKING_LEVEL", "LOW")
 
     lang: str = os.getenv("MOSANED_LANG", "en")
     db_path: str = os.getenv("MOSANED_DB", str(Path.cwd() / "mosaned.db"))
