@@ -127,3 +127,25 @@ def test_stub_fork_reads_intent():
     stub = StubProvider()
     assert stub.classify_intent("I've had a cough for 3 days") is MessageKind.SYMPTOM
     assert stub.classify_intent("What is a chronic cough?") is MessageKind.QUESTION
+
+
+def test_the_fork_costs_no_extra_model_call():
+    """Intent is read in the same pass as the gate. A separate call for it was
+    a third of the quota spent re-reading a message we had just read."""
+    calls = {"assess": 0, "intent": 0}
+
+    class Counting(Grounded):
+        def assess(self, message, flags, context=""):
+            calls["assess"] += 1
+            return super().assess(message, flags, context)
+
+        def classify_intent(self, message):
+            calls["intent"] += 1
+            return super().classify_intent(message)
+
+    session = IntakeSession(_provider=Counting())
+    session.send("I've had a cough for 3 days")
+    session.send("Is ibuprofen safe with blood pressure tablets?")
+
+    assert calls["assess"] == 2
+    assert calls["intent"] == 0, "the fork should not cost its own call"

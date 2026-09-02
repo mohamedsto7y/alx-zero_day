@@ -53,7 +53,20 @@ def call(model: str, thinking: str | None, schema: bool) -> tuple[float, str]:
         thinking = usage.get("thoughtsTokenCount", 0)
         return time.perf_counter() - start, f"ok  served={served} think={thinking}"
     except urllib.error.HTTPError as exc:
-        return time.perf_counter() - start, f"HTTP {exc.code}"
+        elapsed = time.perf_counter() - start
+        detail = ""
+        try:
+            err = json.loads(exc.read().decode("utf-8")).get("error", {})
+            detail = err.get("message", "")[:110]
+            for item in err.get("details", []) or []:
+                if "quotaId" in str(item) or "QuotaFailure" in str(item.get("@type", "")):
+                    for violation in item.get("violations", []) or []:
+                        detail += f" | quota={violation.get('quotaId', '?')}"
+                if "RetryInfo" in str(item.get("@type", "")):
+                    detail += f" | retry_after={item.get('retryDelay', '?')}"
+        except Exception:
+            pass
+        return elapsed, f"HTTP {exc.code}  {detail}"
     except Exception as exc:
         return time.perf_counter() - start, type(exc).__name__
 

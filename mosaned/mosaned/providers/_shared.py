@@ -40,12 +40,17 @@ class JSONProviderBase:
         )
         known = {f.id for f in flags}
         present = [fid for fid in raw.get("present", []) or [] if fid in known]
+        try:
+            kind = MessageKind(str(raw.get("kind", "symptom")))
+        except ValueError:
+            kind = MessageKind.SYMPTOM
         return GateAssessment(
             present_flag_ids=present,
             free_concern=FreeConcern(
                 concerned=bool(raw.get("concerned")),
                 reason=str(raw.get("concern_reason", ""))[:400],
             ),
+            kind=kind,
         )
 
     def classify_complaint(self, message: str, categories: list[str]) -> str:

@@ -31,10 +31,16 @@ def _strip_unsupported(schema: dict[str, Any]) -> dict[str, Any]:
     return {k: v for k, v in schema.items() if k != "additionalProperties"}
 
 
-# 503 (overloaded) and 429 (rate limited) are transient and common on the free
-# tier. They say nothing about the patient's message, so they are worth waiting
-# out rather than reporting as a failure to read it.
-_TRANSIENT = {429, 500, 502, 503, 504}
+# 503 and friends are server-side hiccups: waiting a moment and asking again is
+# the right response. 429 is not in that set on purpose -- being rate limited
+# means we have already asked too often, and retrying spends more of the quota
+# to be refused again. We surface it instead, so the cause is visible rather
+# than buried under a slow failure.
+_TRANSIENT = {500, 502, 503, 504}
+
+
+class RateLimited(RuntimeError):
+    """The account is out of quota, or asking too fast. Not a patient problem."""
 
 
 def _post(req: urllib.request.Request, attempts: int = 3) -> dict[str, Any]:
@@ -46,6 +52,8 @@ def _post(req: urllib.request.Request, attempts: int = 3) -> dict[str, Any]:
                 return json.loads(resp.read().decode("utf-8"))
         except urllib.error.HTTPError as exc:
             last = exc
+            if exc.code == 429:
+                raise RateLimited(_explain(exc)) from exc
             if exc.code not in _TRANSIENT or attempt == attempts - 1:
                 raise
             time.sleep(delay)
@@ -57,6 +65,22 @@ def _post(req: urllib.request.Request, attempts: int = 3) -> dict[str, Any]:
             time.sleep(delay)
             delay *= 2
     raise RuntimeError(f"Gemini request failed: {last}")
+
+
+def _explain(exc: urllib.error.HTTPError) -> str:
+    """Pull Google's own account of what went wrong out of the error body."""
+    try:
+        err = json.loads(exc.read().decode("utf-8")).get("error", {})
+    except Exception:
+        return f"HTTP {exc.code}"
+    parts = [err.get("message", f"HTTP {exc.code}")]
+    for item in err.get("details", []) or []:
+        for violation in item.get("violations", []) or []:
+            if violation.get("quotaId"):
+                parts.append(f"quota={violation['quotaId']}")
+        if item.get("retryDelay"):
+            parts.append(f"retry after {item['retryDelay']}")
+    return " · ".join(parts)
 
 
 def _thinking() -> dict[str, Any]:

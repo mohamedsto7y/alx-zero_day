@@ -82,6 +82,7 @@ class GateAssessment:
     stay independent signals -- the OR that combines them lives in the engine."""
     present_flag_ids: list[str]
     free_concern: FreeConcern
+    kind: "MessageKind" = None  # type: ignore[assignment]
 
 
 @dataclass(frozen=True)
@@ -92,6 +93,9 @@ class GateResult:
     # True when the message could not be read for danger at all. Not the same
     # as "nothing found": we halt rather than let an unread message through.
     read_failed: bool = False
+    # Symptom or question, read in the same pass. A separate call for this was
+    # a third of the quota spent re-reading a message we had just read.
+    kind: "MessageKind" = None  # type: ignore[assignment]
 
     @property
     def emergency_flags(self) -> list[FiredFlag]:

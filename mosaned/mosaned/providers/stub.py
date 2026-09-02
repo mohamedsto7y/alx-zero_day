@@ -55,7 +55,11 @@ class StubProvider:
         present = [f.id for f in flags if any(cue in low for cue in _CUES.get(f.id, ()))]
         # The stub has no clinical judgment, so it never raises a concern of its
         # own: tests exercise the flag list rather than that branch.
-        return GateAssessment(present_flag_ids=present, free_concern=FreeConcern(concerned=False))
+        return GateAssessment(
+            present_flag_ids=present,
+            free_concern=FreeConcern(concerned=False),
+            kind=self.classify_intent(message),
+        )
 
     def classify_complaint(self, message: str, categories: list[str]) -> str:
         low = message.lower()

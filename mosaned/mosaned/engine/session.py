@@ -106,14 +106,9 @@ class IntakeSession:
             return {"state": self.state.value, "reply": reply,
                     "read_failed": True, "awaiting": self.pending_slot_id}
 
-        # 2. The fork. A patient may ask a question at any point, including
-        # halfway through giving a history -- especially then.
-        try:
-            kind = self._provider.classify_intent(message)
-        except Exception:
-            kind = MessageKind.SYMPTOM   # safer default: keeps taking a history
-
-        if kind is MessageKind.QUESTION:
+        # 2. The fork. Read in the same pass as the gate: a separate call for
+        # it was a third of the quota spent re-reading the same message.
+        if latest.kind is MessageKind.QUESTION:
             return self._answer_question(message)
 
         # 3. The first symptom message sets the complaint and picks the flow.

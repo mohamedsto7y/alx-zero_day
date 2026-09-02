@@ -14,7 +14,7 @@ itself is the `if` at the bottom of this file and nowhere else.
 """
 from __future__ import annotations
 
-from ..domain import FiredFlag, FreeConcern, GateResult
+from ..domain import FiredFlag, FreeConcern, GateResult, MessageKind
 from ..providers.base import LLMProvider
 from .clinical import emergency_flags
 
@@ -32,11 +32,13 @@ def run_gate(
     # was there.
     concern: FreeConcern | None = None
     present: list[str] = []
+    kind = MessageKind.SYMPTOM   # safe default: keeps taking a history
     read_failed = True
     for _ in range(2):  # one retry: a transient blip shouldn't halt an intake
         try:
             assessment = provider.assess(message, flags, context)
             present, concern = assessment.present_flag_ids, assessment.free_concern
+            kind = assessment.kind or MessageKind.SYMPTOM
             read_failed = False
             break
         except Exception:
@@ -66,6 +68,7 @@ def run_gate(
         fired=fired,
         free_concern=concern,
         read_failed=read_failed,
+        kind=kind,
     )
 
 

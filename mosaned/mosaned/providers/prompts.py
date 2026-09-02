@@ -26,6 +26,11 @@ ASSESS_SYSTEM = (
     "is a specific question, so there you should err the other way -- if a named "
     "sign is plausibly present, list it.\n"
     "\n"
+    "Finally: say what kind of message it is. 'symptom' if they are describing "
+    "something they are experiencing. 'question' if they want to understand "
+    "something general and are not reporting a problem of their own right now. "
+    "'both' if they do each in the same message.\n"
+    "\n"
     "Do not diagnose, advise, or explain."
 )
 
@@ -67,8 +72,9 @@ def assess_schema(flags: list[FlagSpec]) -> dict[str, Any]:
                 "type": "array",
                 "items": {"type": "string", "enum": [f.id for f in flags]},
             },
+            "kind": {"type": "string", "enum": ["symptom", "question", "both"]},
         },
-        "required": ["concerned", "concern_reason", "present"],
+        "required": ["concerned", "concern_reason", "present", "kind"],
         "additionalProperties": False,
     }
 
