@@ -131,21 +131,32 @@ def test_stub_fork_reads_intent():
 
 def test_the_fork_costs_no_extra_model_call():
     """Intent is read in the same pass as the gate. A separate call for it was
-    a third of the quota spent re-reading a message we had just read."""
-    calls = {"assess": 0, "intent": 0}
+    a third of the per-message quota spent re-reading the same message.
 
-    class Counting(Grounded):
+    The double answers `assess` without delegating, and makes `classify_intent`
+    fatal -- so the session reaching for it fails loudly rather than quietly
+    costing a request.
+    """
+    from mosaned.domain import FreeConcern, GateAssessment
+
+    calls = {"assess": 0}
+
+    class OneReadOnly(Grounded):
         def assess(self, message, flags, context=""):
             calls["assess"] += 1
-            return super().assess(message, flags, context)
+            asking = "?" in message
+            return GateAssessment(
+                present_flag_ids=[],
+                free_concern=FreeConcern(concerned=False),
+                kind=MessageKind.QUESTION if asking else MessageKind.SYMPTOM,
+            )
 
         def classify_intent(self, message):
-            calls["intent"] += 1
-            return super().classify_intent(message)
+            raise AssertionError("the fork must not cost its own model call")
 
-    session = IntakeSession(_provider=Counting())
+    session = IntakeSession(_provider=OneReadOnly())
     session.send("I've had a cough for 3 days")
-    session.send("Is ibuprofen safe with blood pressure tablets?")
+    result = session.send("Is ibuprofen safe with blood pressure tablets?")
 
-    assert calls["assess"] == 2
-    assert calls["intent"] == 0, "the fork should not cost its own call"
+    assert calls["assess"] == 2, "one read per message, no more"
+    assert result["kind"] == "question", "the merged read still drives the fork"
