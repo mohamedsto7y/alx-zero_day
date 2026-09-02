@@ -44,7 +44,14 @@ def main() -> int:
 
     if session.state is SessionState.ESCALATED:
         print("--- intake stopped at the gate ---")
-        print("flags:", ", ".join(f.flag_id for f in session.gate.fired) or "(model judgment)")
+        fired = [f"{f.flag_id}({f.level})" for f in session.gate.fired]
+        print("flags:", ", ".join(fired) or "(none)")
+        concern = session.gate.free_concern
+        if concern and concern.concerned:
+            print(f"model judgment: {concern.reason or '(no reason given)'}")
+        elif not any(f.level == "emergency" for f in session.gate.fired):
+            print("escalated with no emergency flag and no stated concern"
+                  " -- that is a bug, please report it")
         return 0
 
     print("--- structured history (clinician view) ---")
