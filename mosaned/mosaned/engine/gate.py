@@ -73,12 +73,19 @@ def run_gate(
 
 
 def merge(previous: GateResult | None, latest: GateResult) -> GateResult:
-    """Flags fired on earlier messages stay fired for the rest of the session."""
+    """Flags fired on earlier messages stay fired for the rest of the session.
+
+    De-duplicated by flag, keeping the first firing. The gate sees the whole
+    conversation, so it re-reports a standing flag on every message -- keyed by
+    (flag, turn) that produced one entry per turn, each quoting whatever the
+    patient happened to say last. A record showing blood-streaked sputum
+    attributed to the word "no" is worse than no record.
+    """
     if previous is None:
         return latest
-    seen = {(f.flag_id, f.on_message) for f in previous.fired}
+    seen = {f.flag_id for f in previous.fired}
     combined = list(previous.fired) + [
-        f for f in latest.fired if (f.flag_id, f.on_message) not in seen
+        f for f in latest.fired if f.flag_id not in seen
     ]
     return GateResult(
         escalate=previous.escalate or latest.escalate,

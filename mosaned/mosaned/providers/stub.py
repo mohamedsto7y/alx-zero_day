@@ -94,6 +94,11 @@ class StubProvider:
 
     def classify_intent(self, message: str) -> MessageKind:
         low = message.lower()
+        if any(cue in low for cue in (
+            "what do i have", "what can i be having", "what is wrong with me",
+            "is this serious", "could it be", "what do you think",
+        )):
+            return MessageKind.DIAGNOSIS
         asking = any(cue in low for cue in (
             "is it", "what is", "what are", "what does", "can i", "should i",
             "why do", "how do", "does it", "safe to", "?",

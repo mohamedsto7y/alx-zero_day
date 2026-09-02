@@ -27,5 +27,6 @@
   "knowledge.not_about_you": "That's general information. The doctor you see can tell you what it means for you specifically.",
   "fork.both_acknowledged": "I'll come back to your question — first let me understand what's going on, so whoever sees you has the full picture.",
   "escalate.emergency.repeat": "I can't help you book for this. Please go to the nearest emergency department now, or call 123.",
-  "ask.moving_on": "That's alright — I've noted you're not sure."
+  "ask.moving_on": "That's alright — I've noted you're not sure.",
+  "diagnosis.declined": "I can't tell you what's causing this — and I want to be straight about why. It isn't caution: nobody could answer that without examining you, and probably without some tests. A guess from me would either frighten you or falsely reassure you, and both are worse than waiting.\n\nWhat I can do is make sure the doctor you see already has everything you've told me, so they can get to the answer faster."
 }

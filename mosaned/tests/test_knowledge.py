@@ -160,3 +160,35 @@ def test_the_fork_costs_no_extra_model_call():
 
     assert calls["assess"] == 2, "one read per message, no more"
     assert result["kind"] == "question", "the merged read still drives the fork"
+
+
+def test_asking_what_they_have_is_declined_honestly():
+    """"What do I have" is the commonest question a patient asks. Answering it
+    with "I don't have reliable information" is untrue -- we are not short of
+    information, we decline by design -- and it wastes a search."""
+    session = IntakeSession(_provider=Grounded())
+    session.send("I've had a cough for 10 weeks")
+    result = session.send("what can i be having")
+
+    assert "can't tell you what's causing this" in result["reply"]
+    assert "don't have reliable information" not in result["reply"]
+
+
+def test_an_answer_bundled_with_a_diagnosis_request_is_still_heard():
+    """"no..what can i be having" is a denial AND a request. Dropping the
+    denial makes the patient repeat themselves, which they already resent."""
+    session = IntakeSession(_provider=Grounded())
+    session.send("I've had a cough for 10 weeks")
+    pending = session.pending_slot_id
+    session.send("no..what can i be having")
+
+    filled = {**session.history.hpi, **session.history.background}
+    assert pending in filled, "the answer in the same message must not be lost"
+
+
+def test_a_declined_diagnosis_still_moves_the_history_along():
+    session = IntakeSession(_provider=Grounded())
+    session.send("I've had a cough for 10 weeks")
+    before = session.pending_slot_id
+    result = session.send("is this serious? what do you think it is")
+    assert result.get("awaiting") != before or result["state"] != "gathering"

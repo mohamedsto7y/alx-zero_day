@@ -39,10 +39,14 @@ ASSESS_SYSTEM = (
     "is a specific question, so there you should err the other way -- if a named "
     "sign is plausibly present, list it.\n"
     "\n"
-    "Finally: say what kind of message it is. 'symptom' if they are describing "
-    "something they are experiencing. 'question' if they want to understand "
-    "something general and are not reporting a problem of their own right now. "
-    "'both' if they do each in the same message.\n"
+    "Finally: say what kind of message it is.\n"
+    "  symptom   - describing something they are experiencing.\n"
+    "  question  - wanting to understand something general: a medicine, a "
+    "condition, a test, a word. Not about their own case.\n"
+    "  diagnosis - asking what is wrong with THEM. \"what do I have\", "
+    "\"is this serious\", \"could it be cancer\", \"what do you think it is\". "
+    "Use this even when they also answer a question in the same message.\n"
+    "  both      - a symptom and a general question together.\n"
     "\n"
     "Do not diagnose, advise, or explain."
 )
@@ -85,7 +89,10 @@ def assess_schema(flags: list[FlagSpec]) -> dict[str, Any]:
                 "type": "array",
                 "items": {"type": "string", "enum": [f.id for f in flags]},
             },
-            "kind": {"type": "string", "enum": ["symptom", "question", "both"]},
+            "kind": {
+                "type": "string",
+                "enum": ["symptom", "question", "both", "diagnosis"],
+            },
         },
         "required": ["concerned", "concern_reason", "present", "kind"],
         "additionalProperties": False,
@@ -159,7 +166,12 @@ def extract_prompt(message: str, slots: list[Slot], asked: str = "",
     nothing, and the patient gets asked again -- which is exactly what happened.
     """
     lines = "\n".join(f"- {s.id}: {s.about}" for s in slots)
-    context = ""
+    context = (
+        "This is the patient's opening description of the problem, not an "
+        "answer to any question. Fill ONLY the fields it states clearly and "
+        "directly, and leave every other field empty -- do not stretch part of "
+        "the sentence to fit a field it does not actually describe.\n\n"
+    )
     if asked:
         context = (
             f"You have just asked the patient:\n\"\"\"{asked}\"\"\"\n"

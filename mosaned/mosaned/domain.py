@@ -23,6 +23,7 @@ class MessageKind(str, Enum):
     SYMPTOM = "symptom"      # something they are experiencing -> take a history
     QUESTION = "question"    # something they want to understand -> answer it
     BOTH = "both"            # "my chest hurts, is that a heart attack?"
+    DIAGNOSIS = "diagnosis"  # "what do I have?" -- the one we must never answer
 
 
 @dataclass(frozen=True)

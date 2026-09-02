@@ -117,6 +117,11 @@ class IntakeSession:
         if latest.kind is MessageKind.QUESTION:
             return self._answer_question(message)
 
+        # "no..what can i be having" is a denial AND a request for a diagnosis.
+        # Decline the diagnosis, but carry on reading the answer -- dropping it
+        # would make them repeat themselves, which they already resent.
+        asked_for_diagnosis = latest.kind is MessageKind.DIAGNOSIS
+
         # 3. The first symptom message sets the complaint and picks the flow.
         if not self.complaint_established:
             self._establish_complaint(message)
@@ -155,7 +160,10 @@ class IntakeSession:
 
         slot = loop_mod.next_slot(self.flow, self.history)
         if slot is None:
-            return self._complete()
+            result = self._complete()
+            if asked_for_diagnosis:
+                result["reply"] = f"{t('diagnosis.declined')}\n\n{result['reply']}"
+            return result
 
         question = _plain_question(slot)
         if settings.phrase_questions:
@@ -168,6 +176,8 @@ class IntakeSession:
 
         if moved_on:
             question = f"{t('ask.moving_on')} {question}"
+        if asked_for_diagnosis:
+            question = f"{t('diagnosis.declined')}\n\n{question}"
 
         self.asked.append(question)
         self.slot_attempts[slot.id] = self.slot_attempts.get(slot.id, 0) + 1
