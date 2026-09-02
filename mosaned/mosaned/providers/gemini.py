@@ -68,6 +68,11 @@ def _thinking() -> dict[str, Any]:
 class GeminiProvider(JSONProviderBase):
     name = "gemini"
 
+    # What the API said it actually served, taken from the response body rather
+    # than from what we asked for. Proof, not assurance.
+    last_served_model: str = ""
+    last_usage: dict[str, Any] | None = None
+
     def __init__(self, api_key: str | None = None, model: str | None = None) -> None:
         self.api_key = api_key or settings.gemini_api_key
         self.model = model or settings.gemini_model
@@ -94,6 +99,8 @@ class GeminiProvider(JSONProviderBase):
             body = _post(req)
         except Exception as exc:
             raise RuntimeError(f"Gemini request failed: {exc}") from exc
+
+        self._note_provenance(body)
 
         try:
             text = body["candidates"][0]["content"]["parts"][0]["text"]
@@ -129,6 +136,8 @@ class GeminiProvider(JSONProviderBase):
         except Exception:
             return KnowledgeAnswer(text="", sources=[], grounded=False)
 
+        self._note_provenance(body)
+
         try:
             candidate = body["candidates"][0]
             text = "".join(
@@ -148,3 +157,22 @@ class GeminiProvider(JSONProviderBase):
         return KnowledgeAnswer(
             text=text, sources=list(sources.values()), grounded=bool(text and sources)
         )
+
+    def _note_provenance(self, body: dict[str, Any]) -> None:
+        """Record which model Google says answered, and what it cost.
+
+        Reported from the response, so it cannot be faked by a misconfigured
+        client: if this prints a model version, a real request reached Google
+        and that is what served it.
+        """
+        GeminiProvider.last_served_model = str(body.get("modelVersion", ""))
+        GeminiProvider.last_usage = body.get("usageMetadata") or None
+        if settings.debug_timing and GeminiProvider.last_served_model:
+            usage = GeminiProvider.last_usage or {}
+            total = usage.get("totalTokenCount", "?")
+            thoughts = usage.get("thoughtsTokenCount", 0)
+            print(
+                f"    [served by {GeminiProvider.last_served_model}"
+                f" · {total} tokens, {thoughts} thinking]",
+                flush=True,
+            )

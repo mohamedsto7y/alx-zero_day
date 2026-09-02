@@ -47,8 +47,11 @@ def call(model: str, thinking: str | None, schema: bool) -> tuple[float, str]:
     start = time.perf_counter()
     try:
         with urllib.request.urlopen(req, timeout=300) as resp:
-            resp.read()
-        return time.perf_counter() - start, "ok"
+            body = json.loads(resp.read().decode("utf-8"))
+        served = body.get("modelVersion", "?")
+        usage = body.get("usageMetadata") or {}
+        thinking = usage.get("thoughtsTokenCount", 0)
+        return time.perf_counter() - start, f"ok  served={served} think={thinking}"
     except urllib.error.HTTPError as exc:
         return time.perf_counter() - start, f"HTTP {exc.code}"
     except Exception as exc:
@@ -74,7 +77,9 @@ def main() -> int:
         seconds, status = call(m, think, schema)
         print(f"  {seconds:7.1f}s  {status:9} {label}")
 
-    print("\nAll rows slow  -> account, region or network, not thinking.")
+    print("\n`served=` is what Google says answered. It comes from the response")
+    print("body, so it is proof a real request reached them.\n")
+    print("All rows slow  -> account, region or network, not thinking.")
     print("Only HIGH slow -> thinking was the cost; LOW is the fix.")
     print("Only 3.7 slow  -> that model is queued on your tier; try 2.5-flash.")
     return 0
