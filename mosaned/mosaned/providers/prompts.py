@@ -79,10 +79,15 @@ def assess_prompt(message: str, flags: list[FlagSpec], context: str = "") -> str
     deal, and judging it without that is asking an unanswerable question."""
     lines = "\n".join(f"- {f.id}: {f.sense}" for f in flags)
     conversation = f"Conversation so far:\n{context}\n\n" if context else ""
+    # Order matters for speed, not just readability. The flag list is identical
+    # on every call and is by far the largest part of the prompt, so it goes
+    # FIRST: a runtime that caches a stable prefix can reuse it across the whole
+    # session. The conversation and the new message vary, so they go last.
+    # Reversed, every message pays full prompt-processing cost for all 39 flags.
     return (
+        f"Named warning signs:\n{lines}\n\n"
         f"{conversation}"
-        f"Latest patient message:\n\"\"\"{message}\"\"\"\n\n"
-        f"Named warning signs:\n{lines}"
+        f"Latest patient message:\n\"\"\"{message}\"\"\""
     )
 
 

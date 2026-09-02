@@ -59,6 +59,12 @@ dry", and a safety net that cries wolf is ignored within a day.
 The gate also sees the **conversation**, not just the newest message. "It's
 dry" alone is unjudgeable; as an answer about a three-day cough it is not.
 
+The gate prompt puts the **flag list first and the conversation last**. That
+list is ~3.5KB and identical on every call, so a runtime that caches a stable
+prefix reuses it for the whole session; in the other order every message pays
+full prompt-processing for all 39 flags. On a local model that ordering is the
+single biggest cost in the system.
+
 The gate **fails closed**. If a message can't be read for danger at all, the
 intake halts (after one retry) rather than continuing, and says plainly that it
 couldn't check — it never claims to have found something it didn't.
@@ -107,6 +113,7 @@ decisions can be tested offline.
 | `MOSANED_PROVIDER` | `stub` | `stub`, `ollama`, `gemini` |
 | `MOSANED_MODEL` | `qwen2.5:7b-instruct` | Ollama model tag |
 | `OLLAMA_HOST` | `http://localhost:11434` | |
+| `OLLAMA_KEEP_ALIVE` | `30m` | Keeps the model resident between messages |
 | `GEMINI_API_KEY` | — | |
 | `MOSANED_LANG` | `en` | Swap to `ar` once `strings/ar.json` exists |
 | `MOSANED_DB` | `./mosaned.db` | |

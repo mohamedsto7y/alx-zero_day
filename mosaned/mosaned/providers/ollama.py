@@ -28,7 +28,10 @@ class OllamaProvider(JSONProviderBase):
             ],
             "stream": False,
             "format": schema,          # Ollama constrains decoding to this schema
-            "options": {"temperature": 0},
+            # keep_alive stops Ollama unloading the model between messages --
+            # a reload costs more than the request itself.
+            "keep_alive": settings.ollama_keep_alive,
+            "options": {"temperature": 0, "num_predict": 512},
         }
         req = urllib.request.Request(
             f"{self.host}/api/chat",

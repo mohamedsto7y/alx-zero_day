@@ -26,6 +26,7 @@ class Settings:
     provider: str = os.getenv("MOSANED_PROVIDER", "stub")
     model: str = os.getenv("MOSANED_MODEL", "qwen2.5:7b-instruct")
     ollama_host: str = os.getenv("OLLAMA_HOST", "http://localhost:11434")
+    ollama_keep_alive: str = os.getenv("OLLAMA_KEEP_ALIVE", "30m")
     gemini_api_key: str = os.getenv("GEMINI_API_KEY", "")
     gemini_model: str = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
 
