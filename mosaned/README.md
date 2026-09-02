@@ -69,6 +69,36 @@ The gate **fails closed**. If a message can't be read for danger at all, the
 intake halts (after one retry) rather than continuing, and says plainly that it
 couldn't check — it never claims to have found something it didn't.
 
+## Two paths: a symptom, or a question
+
+Mosaned is a companion, not an intake bot. Patients ask things — about a
+medicine, a condition, a word on a report — and answering is not diagnosing.
+So every message forks after the gate:
+
+- **symptom** → take a history (below)
+- **question** → answer it from live sources, with a citation
+- **both** → gate first, then history; the question is answered on the way
+
+There is no knowledge base. The model searches the web at question time,
+restricted to domains you name in `MOSANED_SOURCE_DOMAINS`, and cites what it
+found. Curation is a list of domains, not a library to maintain.
+
+If nothing is found, or every citation is off-list, it says it doesn't know
+rather than answering from memory. Same fail-closed rule as the gate.
+
+### The firewall
+
+`engine/knowledge.py` takes a question string and nothing else. Not the
+history, not the complaint, not the flags — and that signature *is* the
+safety mechanism.
+
+Given a patient with a ten-week cough and weight loss who asks "what causes a
+cough that goes on this long?", a model that can see the chart will helpfully
+answer *"given your ten weeks and the weight loss…"* — a diagnosis, delivered
+by an app, that nobody decided to make. Withholding the chart makes it
+impossible rather than merely discouraged. There is a test that asserts the
+history never crosses.
+
 ## Three tiers, not dozens of flows
 
 1. **Complaint router** — classifies the opening message, constrained to a list.
@@ -88,7 +118,7 @@ authoring queue, driven by real demand.
 pip install -r requirements.txt
 
 python run.py            # terminal conversation, deterministic stub, no model
-python -m pytest tests   # 33 tests
+python -m pytest tests   # 44 tests
 uvicorn mosaned.main:app --reload
 ```
 
@@ -110,11 +140,14 @@ decisions can be tested offline.
 
 | Variable | Default | What it does |
 |---|---|---|
-| `MOSANED_PROVIDER` | `stub` | `stub`, `ollama`, `gemini` |
+| `MOSANED_PROVIDER` | `stub` | `stub`, `ollama`, `gemini`, `anthropic` |
 | `MOSANED_MODEL` | `qwen2.5:7b-instruct` | Ollama model tag |
 | `OLLAMA_HOST` | `http://localhost:11434` | |
 | `OLLAMA_KEEP_ALIVE` | `30m` | Keeps the model resident between messages |
 | `GEMINI_API_KEY` | — | |
+| `ANTHROPIC_API_KEY` | — | |
+| `ANTHROPIC_MODEL` | `claude-haiku-4-5` | |
+| `MOSANED_SOURCE_DOMAINS` | `nhs.uk,msdmanuals.com,…` | The only curation the answer path needs |
 | `MOSANED_LANG` | `en` | Swap to `ar` once `strings/ar.json` exists |
 | `MOSANED_DB` | `./mosaned.db` | |
 | `MOSANED_MAX_TURNS` | `16` | Hard stop on a stuck conversation |
@@ -172,7 +205,8 @@ mosaned/
   providers/           the one swappable component
     base.py              the protocol the engine sees
     prompts.py           prompts + JSON schemas (translate here)
-    stub.py / ollama.py / gemini.py
+    stub.py / ollama.py / gemini.py / anthropic.py
+  engine/knowledge.py    the firewalled answer path
   strings/en.json      every patient-facing string
   seeds/doctors.json   vetted roster, scores carry provenance
 ```

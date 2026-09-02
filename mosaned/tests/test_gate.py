@@ -112,10 +112,19 @@ def test_escalation_stops_the_intake_completely():
     session = IntakeSession(_provider=SilentProvider())
     session.send("I am coughing up blood")
     assert session.state is SessionState.ESCALATED
-    before = len(session.transcript)
-    session.send("ok but what about my cough")
+    result = session.send("ok but what about my cough")
     assert session.state is SessionState.ESCALATED
-    assert len(session.transcript) == before
+    assert result["care_level"] == "emergency"
+
+
+def test_pushing_back_after_escalation_gets_direction_not_debate():
+    """Repeat the instruction. Don't argue, don't reassure, don't book."""
+    session = IntakeSession(_provider=SilentProvider())
+    session.send("I have crushing chest pain")
+    result = session.send("I can't afford the hospital, can I just see someone next week")
+    assert "emergency department" in result["reply"]
+    assert "123" in result["reply"]
+    assert session.state is SessionState.ESCALATED
 
 
 def test_gate_is_given_the_conversation_not_just_the_last_message():

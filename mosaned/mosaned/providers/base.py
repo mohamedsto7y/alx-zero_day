@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Any, Protocol, runtime_checkable
 
-from ..domain import FlagSpec, GateAssessment, Slot
+from ..domain import FlagSpec, GateAssessment, KnowledgeAnswer, MessageKind, Slot
 
 
 @runtime_checkable
@@ -32,3 +32,12 @@ class LLMProvider(Protocol):
 
     def propose_specialty(self, summary: str, specialties: list[str]) -> str:
         """Propose one specialty from the list. The engine may overrule it."""
+
+    def classify_intent(self, message: str) -> MessageKind:
+        """Is this a symptom to take a history for, or a question to answer?"""
+
+    def answer_question(self, question: str, domains: list[str]) -> KnowledgeAnswer:
+        """Answer a general health question from live sources on the named
+        domains. Takes a question and nothing else -- see engine/knowledge.py.
+        Providers that cannot search return grounded=False rather than
+        answering from memory."""

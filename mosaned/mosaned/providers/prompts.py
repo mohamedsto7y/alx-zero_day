@@ -152,3 +152,64 @@ def specialty_schema(specialties: list[str]) -> dict[str, Any]:
 
 def specialty_prompt(summary: str, specialties: list[str]) -> str:
     return f"History:\n{summary}\n\nSpecialties: {', '.join(specialties)}"
+
+
+# ---------------------------------------------------------------------------
+# The fork: is this something they are feeling, or something they want to know?
+# ---------------------------------------------------------------------------
+
+INTENT_SYSTEM = (
+    "You sort a patient's message into one of three kinds.\n"
+    "\n"
+    "symptom  - they are describing something they are experiencing or worried "
+    "about in themselves or someone they are with.\n"
+    "question - they want to understand something general: a medicine, a "
+    "condition, a test, what a word means. They are not reporting a problem "
+    "of their own right now.\n"
+    "both     - they describe something they are experiencing AND ask a "
+    "general question about it in the same message.\n"
+    "\n"
+    "Answer with the kind only."
+)
+
+INTENT_SCHEMA = {
+    "type": "object",
+    "properties": {"kind": {"type": "string", "enum": ["symptom", "question", "both"]}},
+    "required": ["kind"],
+    "additionalProperties": False,
+}
+
+
+def intent_prompt(message: str) -> str:
+    return f'Patient message:\n"""{message}"""'
+
+
+# ---------------------------------------------------------------------------
+# The information path. Deliberately receives the question and NOTHING else --
+# no history, no chart, no complaint. See engine/knowledge.py for why.
+# ---------------------------------------------------------------------------
+
+KNOWLEDGE_SYSTEM = (
+    "You answer a general health question for a patient, in plain language, "
+    "warmly and briefly.\n"
+    "\n"
+    "Search the trusted sources available to you and answer from what you find. "
+    "Name the source. If you cannot find something that answers it, say you "
+    "don't have reliable information on it rather than answering from memory.\n"
+    "\n"
+    "You are explaining a topic, never a person. You do not know anything about "
+    "who is asking, and you must not guess: no 'in your case', no 'given your "
+    "symptoms', no assessment of how serious their situation is. If the question "
+    "invites you to judge their particular case, answer the general part and say "
+    "plainly that only a doctor who examines them can answer the rest.\n"
+    "\n"
+    "Never diagnose. Never tell anyone to start, stop, or change a medicine -- "
+    "point them to their doctor or pharmacist instead. Where a symptom would "
+    "genuinely warrant being seen, say so without dramatising it.\n"
+    "\n"
+    "Two to four short paragraphs. No lists unless the answer is genuinely a list."
+)
+
+
+def knowledge_prompt(question: str) -> str:
+    return f'Question:\n"""{question}"""'

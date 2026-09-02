@@ -18,6 +18,32 @@ class CareLevel(str, Enum):
     EMERGENCY = "emergency"
 
 
+class MessageKind(str, Enum):
+    """What a patient's message is asking for. The fork at the front."""
+    SYMPTOM = "symptom"      # something they are experiencing -> take a history
+    QUESTION = "question"    # something they want to understand -> answer it
+    BOTH = "both"            # "my chest hurts, is that a heart attack?"
+
+
+@dataclass(frozen=True)
+class Source:
+    title: str
+    url: str
+
+
+@dataclass(frozen=True)
+class KnowledgeAnswer:
+    """An answer to a general question. `grounded` is false when nothing
+    usable was found -- and then we say so rather than improvise."""
+    text: str
+    sources: list[Source]
+    grounded: bool
+
+    @property
+    def usable(self) -> bool:
+        return self.grounded and bool(self.text.strip())
+
+
 class SessionState(str, Enum):
     GATHERING = "gathering"
     COMPLETE = "complete"

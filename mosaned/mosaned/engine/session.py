@@ -6,11 +6,14 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from ..config import settings
-from ..domain import CareLevel, GateResult, Routing, SessionState, StructuredHistory
+from ..domain import (
+    CareLevel, GateResult, MessageKind, Routing, SessionState, StructuredHistory,
+)
 from ..providers import get_provider
 from ..providers.base import LLMProvider
 from ..strings import t
 from . import gate as gate_mod
+from . import knowledge as knowledge_mod
 from . import loop as loop_mod
 from . import routing as routing_mod
 from .clinical import flags_reviewed_by, known_complaints, load_flow
@@ -44,6 +47,8 @@ class IntakeSession:
     routing: Routing | None = None
     flow: dict[str, Any] = field(default_factory=dict)
     turn_count: int = 0
+    complaint_established: bool = False
+    pending_slot_id: str | None = None
     _provider: LLMProvider = field(default=None, repr=False)  # type: ignore[assignment]
 
     def __post_init__(self) -> None:
@@ -63,6 +68,14 @@ class IntakeSession:
 
     def send(self, message: str) -> dict[str, Any]:
         """One patient message in, one system reply out."""
+        if self.state is SessionState.ESCALATED:
+            # Anything said after the gate fires gets the same instruction.
+            # No reassurance, no negotiation -- just the direction again.
+            self.transcript.append(Turn("patient", message))
+            reply = t("escalate.emergency.repeat")
+            self.transcript.append(Turn("system", reply))
+            return {"state": self.state.value, "reply": reply,
+                    "care_level": self.history.care_level.value}
         if self.state is not SessionState.GATHERING:
             return self._render()
 
@@ -79,11 +92,21 @@ class IntakeSession:
         if self.gate.escalate:
             return self._escalate()
 
-        # 2. First message also sets the complaint and picks the flow.
-        if self.turn_count == 1:
+        # 2. The fork. A patient may ask a question at any point, including
+        # halfway through giving a history -- especially then.
+        try:
+            kind = self._provider.classify_intent(message)
+        except Exception:
+            kind = MessageKind.SYMPTOM   # safer default: keeps taking a history
+
+        if kind is MessageKind.QUESTION:
+            return self._answer_question(message)
+
+        # 3. The first symptom message sets the complaint and picks the flow.
+        if not self.complaint_established:
             self._establish_complaint(message)
 
-        # 3. Read whatever this message answered, across every open slot.
+        # 4. Read whatever this message answered, across every open slot.
         # Conditional slots that don't apply are withheld, so the model is
         # never offered a field the flow says shouldn't be asked -- e.g. sputum
         # colour for someone who has said their cough is dry.
@@ -102,7 +125,7 @@ class IntakeSession:
         loop_mod.apply_derivations(self.history, self.flow)
         loop_mod.apply_clinician_notes(self.history, self.flow)
 
-        # 4. Next question, or finish.
+        # 5. Next question, or finish.
         if self.turn_count >= settings.max_turns:
             return self._complete()
 
@@ -120,6 +143,7 @@ class IntakeSession:
                 pass
 
         self.asked.append(question)
+        self.pending_slot_id = slot.id
         self.transcript.append(Turn("system", question))
         return {"state": self.state.value, "reply": question, "awaiting": slot.id}
 
@@ -140,6 +164,35 @@ class IntakeSession:
             lines.insert(0, f"(came in about: {complaint})")
         return "\n".join(lines)
 
+    def _answer_question(self, message: str) -> dict[str, Any]:
+        """Answer a general question, then carry on where we left off.
+
+        THE FIREWALL: only `message` crosses into the knowledge path. Not
+        self.history, not the complaint, not the flags. If this path could see
+        the chart, a helpful model would tailor the answer to this patient --
+        and a tailored answer is a diagnosis, arrived at by nobody's decision.
+        """
+        result = knowledge_mod.answer(message, self._provider)
+        reply = knowledge_mod.render(result)
+
+        if result.grounded and self.complaint_established:
+            reply += "\n\n" + t("knowledge.not_about_you")
+
+        # Put the patient back where they were, so a question doesn't derail
+        # the history they were part-way through giving.
+        if self.complaint_established and self.asked:
+            reply += "\n\n" + self.asked[-1]
+
+        self.transcript.append(Turn("system", reply))
+        return {
+            "state": self.state.value,
+            "reply": reply,
+            "kind": "question",
+            "grounded": result.grounded,
+            "sources": [s.url for s in result.sources],
+            "awaiting": self.pending_slot_id,
+        }
+
     def _establish_complaint(self, message: str) -> None:
         self.history.presenting_complaint_raw = message.strip()
         try:
@@ -149,6 +202,7 @@ class IntakeSession:
         self.history.presenting_complaint_category = category
         self.flow = load_flow(category if category != "unknown" else "generic")
         self.history.flow_id = self.flow["id"]
+        self.complaint_established = True
 
     def _escalate(self) -> dict[str, Any]:
         self.state = SessionState.ESCALATED

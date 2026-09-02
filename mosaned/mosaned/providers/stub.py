@@ -9,7 +9,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from ..domain import FlagSpec, FreeConcern, GateAssessment, Slot
+from ..domain import (
+    FlagSpec, FreeConcern, GateAssessment, KnowledgeAnswer, MessageKind, Slot,
+)
 
 # Crude cue words per flag, for offline testing only.
 _CUES: dict[str, tuple[str, ...]] = {
@@ -81,3 +83,22 @@ class StubProvider:
             if cue in low and spec in specialties:
                 return spec
         return specialties[0] if specialties else ""
+
+    def classify_intent(self, message: str) -> MessageKind:
+        low = message.lower()
+        asking = any(cue in low for cue in (
+            "is it", "what is", "what are", "what does", "can i", "should i",
+            "why do", "how do", "does it", "safe to", "?",
+        ))
+        describing = any(cue in low for cue in (
+            "i have", "i've had", "i feel", "my ", "i am", "i'm",
+        ))
+        if asking and describing:
+            return MessageKind.BOTH
+        if asking:
+            return MessageKind.QUESTION
+        return MessageKind.SYMPTOM
+
+    def answer_question(self, question: str, domains: list[str]) -> KnowledgeAnswer:
+        # The stub cannot search, so it declines rather than inventing.
+        return KnowledgeAnswer(text="", sources=[], grounded=False)

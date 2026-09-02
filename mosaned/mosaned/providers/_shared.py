@@ -10,7 +10,9 @@ import time
 from typing import Any
 
 from ..config import settings
-from ..domain import FlagSpec, FreeConcern, GateAssessment, Slot
+from ..domain import (
+    FlagSpec, FreeConcern, GateAssessment, KnowledgeAnswer, MessageKind, Slot,
+)
 from . import prompts
 
 
@@ -89,3 +91,19 @@ class JSONProviderBase:
         )
         got = str(raw.get("specialty", ""))
         return got if got in specialties else ""
+
+    def classify_intent(self, message: str) -> MessageKind:
+        raw = self._timed(
+            "intent", prompts.INTENT_SYSTEM, prompts.intent_prompt(message),
+            prompts.INTENT_SCHEMA,
+        )
+        try:
+            return MessageKind(str(raw.get("kind", "symptom")))
+        except ValueError:
+            # An unrecognised answer means we take a history, which is the
+            # safer default: it keeps the emergency gate in the loop.
+            return MessageKind.SYMPTOM
+
+    def answer_question(self, question: str, domains: list[str]) -> KnowledgeAnswer:
+        """Providers without a search tool do not answer from memory."""
+        return KnowledgeAnswer(text="", sources=[], grounded=False)

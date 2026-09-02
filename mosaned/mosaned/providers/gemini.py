@@ -9,6 +9,8 @@ import urllib.request
 from typing import Any
 
 from ..config import settings
+from ..domain import KnowledgeAnswer, Source
+from . import prompts
 from ._shared import JSONProviderBase
 
 _ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
@@ -54,3 +56,52 @@ class GeminiProvider(JSONProviderBase):
             return json.loads(text)
         except (KeyError, IndexError, json.JSONDecodeError):
             return {}
+
+    def answer_question(self, question: str, domains: list[str]) -> KnowledgeAnswer:
+        """Google Search grounding. Gemini has no domain allowlist on the
+        search tool, so the sanctioned domains are asked for in the prompt and
+        then enforced in engine/knowledge.py, which drops any source that is
+        not on the list."""
+        allowed = ", ".join(domains) if domains else "reputable medical sources"
+        payload = {
+            "systemInstruction": {"parts": [{"text": prompts.KNOWLEDGE_SYSTEM}]},
+            "contents": [{
+                "role": "user",
+                "parts": [{"text": (
+                    f"{prompts.knowledge_prompt(question)}\n\n"
+                    f"Search only these sources: {allowed}"
+                )}],
+            }],
+            "tools": [{"google_search": {}}],
+            "generationConfig": {"temperature": 0},
+        }
+        req = urllib.request.Request(
+            _ENDPOINT.format(model=self.model),
+            data=json.dumps(payload).encode("utf-8"),
+            headers={"Content-Type": "application/json", "x-goog-api-key": self.api_key},
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=120) as resp:
+                body = json.loads(resp.read().decode("utf-8"))
+        except (urllib.error.URLError, TimeoutError):
+            return KnowledgeAnswer(text="", sources=[], grounded=False)
+
+        try:
+            candidate = body["candidates"][0]
+            text = "".join(
+                part.get("text", "") for part in candidate["content"]["parts"]
+            ).strip()
+        except (KeyError, IndexError):
+            return KnowledgeAnswer(text="", sources=[], grounded=False)
+
+        sources: dict[str, Source] = {}
+        chunks = candidate.get("groundingMetadata", {}).get("groundingChunks", []) or []
+        for chunk in chunks:
+            web = chunk.get("web") or {}
+            url = web.get("uri", "")
+            if url:
+                sources.setdefault(url, Source(web.get("title", "") or url, url))
+
+        return KnowledgeAnswer(
+            text=text, sources=list(sources.values()), grounded=bool(text and sources)
+        )

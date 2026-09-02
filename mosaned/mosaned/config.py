@@ -28,6 +28,17 @@ class Settings:
     ollama_host: str = os.getenv("OLLAMA_HOST", "http://localhost:11434")
     ollama_keep_alive: str = os.getenv("OLLAMA_KEEP_ALIVE", "30m")
     gemini_api_key: str = os.getenv("GEMINI_API_KEY", "")
+    anthropic_api_key: str = os.getenv("ANTHROPIC_API_KEY", "")
+    # Haiku 4.5 is the cheap, fast tier -- roughly a cent or two per intake.
+    # Change this one value for a stronger model.
+    anthropic_model: str = os.getenv("ANTHROPIC_MODEL", "claude-haiku-4-5")
+
+    # The only curation the information path needs: a list of domains it may
+    # search. No corpus, no scraping, nothing to keep up to date.
+    source_domains: str = os.getenv(
+        "MOSANED_SOURCE_DOMAINS",
+        "nhs.uk,msdmanuals.com,who.int,mayoclinic.org,cdc.gov",
+    )
     gemini_model: str = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
 
     lang: str = os.getenv("MOSANED_LANG", "en")

@@ -18,4 +18,9 @@ def get_provider(name: str | None = None) -> LLMProvider:
     if choice == "gemini":
         from .gemini import GeminiProvider
         return GeminiProvider()
-    raise ValueError(f"Unknown provider {choice!r}. Use stub, ollama or gemini.")
+    if choice == "anthropic":
+        from .anthropic import AnthropicProvider
+        return AnthropicProvider()
+    raise ValueError(
+        f"Unknown provider {choice!r}. Use stub, ollama, gemini or anthropic."
+    )
