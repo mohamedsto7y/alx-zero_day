@@ -39,7 +39,7 @@ class Settings:
         "MOSANED_SOURCE_DOMAINS",
         "nhs.uk,msdmanuals.com,who.int,mayoclinic.org,cdc.gov",
     )
-    gemini_model: str = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
+    gemini_model: str = os.getenv("GEMINI_MODEL", "gemini-3.7-flash")
 
     lang: str = os.getenv("MOSANED_LANG", "en")
     db_path: str = os.getenv("MOSANED_DB", str(Path.cwd() / "mosaned.db"))

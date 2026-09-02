@@ -1,6 +1,15 @@
-"""Google's free tier. Stronger than a local 7B, especially on Arabic, but
-rate-limited and the patient's words leave the machine. Second opinion, not
-the default."""
+"""Gemini. The provider Mosaned runs on.
+
+Structured tasks use responseSchema so the model must answer in the shape we
+asked for. The information path uses the google_search tool, which returns a
+final answer plus groundingMetadata naming what it read.
+
+Note on thinking: Gemini 3 is a reasoning model with a configurable thinking
+level, and lowering it would speed up the schema-filling calls. We leave it
+unset deliberately -- there are reported failures combining thinkingConfig
+with responseSchema, and a nil response on the emergency gate is not a
+trade worth making for latency. Revisit with measurements.
+"""
 from __future__ import annotations
 
 import json

@@ -124,14 +124,19 @@ uvicorn mosaned.main:app --reload
 
 ### With a real model
 
-```bash
-# Free, local, unlimited, and the patient's words never leave the machine
-ollama pull qwen2.5:7b-instruct
-MOSANED_PROVIDER=ollama MOSANED_MODEL=qwen2.5:7b-instruct python run.py
+Mosaned runs on **Gemini**. Copy `.env.example` to `.env` and add a key from
+[aistudio.google.com/apikey](https://aistudio.google.com/apikey):
 
-# Free tier, stronger, especially on Arabic — rate limited, data leaves the box
-MOSANED_PROVIDER=gemini GEMINI_API_KEY=... python run.py
 ```
+MOSANED_PROVIDER=gemini
+GEMINI_API_KEY=...
+GEMINI_MODEL=gemini-3.7-flash
+```
+
+Then `python run.py`. The other providers stay wired as escape hatches —
+`anthropic` (needs `pip install anthropic`) and `ollama` for fully local runs,
+though Ollama cannot search so it declines general questions rather than
+answering them from memory.
 
 `stub` is a deterministic test double, not a model. It exists so the engine's
 decisions can be tested offline.
@@ -140,11 +145,12 @@ decisions can be tested offline.
 
 | Variable | Default | What it does |
 |---|---|---|
-| `MOSANED_PROVIDER` | `stub` | `stub`, `ollama`, `gemini`, `anthropic` |
+| `MOSANED_PROVIDER` | `stub` | `gemini` (what we build on), `anthropic`, `ollama`, `stub` |
 | `MOSANED_MODEL` | `qwen2.5:7b-instruct` | Ollama model tag |
 | `OLLAMA_HOST` | `http://localhost:11434` | |
 | `OLLAMA_KEEP_ALIVE` | `30m` | Keeps the model resident between messages |
-| `GEMINI_API_KEY` | — | |
+| `GEMINI_API_KEY` | — | Free key at aistudio.google.com/apikey |
+| `GEMINI_MODEL` | `gemini-3.7-flash` | |
 | `ANTHROPIC_API_KEY` | — | |
 | `ANTHROPIC_MODEL` | `claude-haiku-4-5` | |
 | `MOSANED_SOURCE_DOMAINS` | `nhs.uk,msdmanuals.com,…` | The only curation the answer path needs |
