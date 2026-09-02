@@ -21,7 +21,7 @@
   "error.unreviewed_flags": "This system's emergency criteria have not yet been reviewed by a doctor. It must not be used with real patients until they are.",
   "ask.template": "Can you tell me about {topic}?",
   "escalate.unavailable.title": "I can't check this properly right now.",
-  "escalate.unavailable.body": "Something on my side isn't working, so I can't safely carry on asking questions. Please try again shortly. If you feel unwell or you're worried, don't wait for me — speak to a doctor, or go to the nearest emergency department.",
+  "escalate.unavailable.body": "Something on my side isn't working, so I couldn't read that properly and I won't guess. Please send it again in a moment. If you feel unwell or you're worried, don't wait for me — speak to a doctor, or go to the nearest emergency department.",
   "knowledge.no_answer": "I don't have reliable information on that one, and I'd rather tell you that than guess. It's worth asking your doctor or your pharmacist — a pharmacist will usually answer a question like this for free.",
   "knowledge.sources": "Source: {sources}",
   "knowledge.not_about_you": "That's general information. The doctor you see can tell you what it means for you specifically.",

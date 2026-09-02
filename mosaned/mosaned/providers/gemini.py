@@ -13,6 +13,7 @@ GEMINI_THINKING_LEVEL if a task ever needs the deliberation.
 from __future__ import annotations
 
 import json
+import time
 import urllib.error
 import urllib.request
 from typing import Any
@@ -28,6 +29,34 @@ _ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/{model}:gen
 def _strip_unsupported(schema: dict[str, Any]) -> dict[str, Any]:
     """Gemini's responseSchema rejects additionalProperties."""
     return {k: v for k, v in schema.items() if k != "additionalProperties"}
+
+
+# 503 (overloaded) and 429 (rate limited) are transient and common on the free
+# tier. They say nothing about the patient's message, so they are worth waiting
+# out rather than reporting as a failure to read it.
+_TRANSIENT = {429, 500, 502, 503, 504}
+
+
+def _post(req: urllib.request.Request, attempts: int = 3) -> dict[str, Any]:
+    delay = 1.0
+    last: Exception | None = None
+    for attempt in range(attempts):
+        try:
+            with urllib.request.urlopen(req, timeout=120) as resp:
+                return json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as exc:
+            last = exc
+            if exc.code not in _TRANSIENT or attempt == attempts - 1:
+                raise
+            time.sleep(delay)
+            delay *= 2
+        except (urllib.error.URLError, TimeoutError) as exc:
+            last = exc
+            if attempt == attempts - 1:
+                raise
+            time.sleep(delay)
+            delay *= 2
+    raise RuntimeError(f"Gemini request failed: {last}")
 
 
 def _thinking() -> dict[str, Any]:
@@ -62,9 +91,8 @@ class GeminiProvider(JSONProviderBase):
             headers={"Content-Type": "application/json", "x-goog-api-key": self.api_key},
         )
         try:
-            with urllib.request.urlopen(req, timeout=120) as resp:
-                body = json.loads(resp.read().decode("utf-8"))
-        except (urllib.error.URLError, TimeoutError) as exc:
+            body = _post(req)
+        except Exception as exc:
             raise RuntimeError(f"Gemini request failed: {exc}") from exc
 
         try:
@@ -97,9 +125,8 @@ class GeminiProvider(JSONProviderBase):
             headers={"Content-Type": "application/json", "x-goog-api-key": self.api_key},
         )
         try:
-            with urllib.request.urlopen(req, timeout=120) as resp:
-                body = json.loads(resp.read().decode("utf-8"))
-        except (urllib.error.URLError, TimeoutError):
+            body = _post(req)
+        except Exception:
             return KnowledgeAnswer(text="", sources=[], grounded=False)
 
         try:

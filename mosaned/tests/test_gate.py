@@ -42,22 +42,42 @@ def test_list_alone_escalates_when_model_is_silent():
     assert result.escalate
 
 
-def test_unreadable_message_fails_closed():
-    """If we cannot read a message for danger, we stop. An unread message is
-    not a safe message -- we cannot tell a cough from a stroke."""
+def test_unreadable_message_is_flagged_but_is_not_an_emergency():
+    """An unread message is not a safe message -- but it is also not a stroke.
+    A blip in the provider's capacity must not send a patient to hospital."""
     result = run_gate("I have crushing chest pain", BrokenProvider(), turn=1)
     assert result.read_failed
-    assert result.escalate
+    assert not result.escalate
 
 
-def test_degraded_halt_does_not_claim_an_emergency_was_found():
-    """Telling a worried person we found something when we found nothing is a
-    lie; telling them we could not check is the truth."""
+def test_a_message_we_could_not_read_is_not_acted_on():
+    """No extraction, no next question -- but the conversation survives."""
     session = IntakeSession(_provider=BrokenProvider())
     result = session.send("I have a mild headache")
-    assert session.state is SessionState.ESCALATED
-    assert "can't check this properly" in result["reply"]
+
+    assert result["read_failed"]
+    assert session.state is SessionState.GATHERING     # session survives
+    assert session.history.hpi == {}                   # nothing was acted on
+    assert "couldn't read that properly" in result["reply"]
     assert "emergency department now" not in result["reply"]
+
+
+def test_an_outage_costs_one_message_not_the_conversation():
+    class DownThenUp(StubProvider):
+        calls = 0
+
+        def assess(self, message, flags, context=""):
+            DownThenUp.calls += 1
+            if DownThenUp.calls <= 2:      # both tries in the first turn fail
+                raise RuntimeError("503")
+            return super().assess(message, flags, context)
+
+    session = IntakeSession(_provider=DownThenUp())
+    session.send("I've had a cough for 3 days")          # blip
+    result = session.send("I've had a cough for 3 days")  # they resend
+    assert session.state is SessionState.GATHERING
+    assert not result.get("read_failed")
+    assert session.history.presenting_complaint_raw
 
 
 def test_a_transient_failure_is_retried_before_halting():

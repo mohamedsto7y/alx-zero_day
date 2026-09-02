@@ -92,6 +92,20 @@ class IntakeSession:
         if self.gate.escalate:
             return self._escalate()
 
+        if latest.read_failed:
+            # We could not check this message for danger, so we refuse to act
+            # on it -- no extraction, no next question. But the session stays
+            # open: a transient outage should cost one message, not the whole
+            # conversation, and nothing unsafe got through.
+            self.turn_count -= 1
+            reply = (
+                f"{t('escalate.unavailable.title')}\n\n"
+                f"{t('escalate.unavailable.body')}"
+            )
+            self.transcript.append(Turn("system", reply))
+            return {"state": self.state.value, "reply": reply,
+                    "read_failed": True, "awaiting": self.pending_slot_id}
+
         # 2. The fork. A patient may ask a question at any point, including
         # halfway through giving a history -- especially then.
         try:
@@ -207,19 +221,11 @@ class IntakeSession:
     def _escalate(self) -> dict[str, Any]:
         self.state = SessionState.ESCALATED
         self.history.care_level = CareLevel.EMERGENCY
-        if self.gate and self.gate.read_failed and not self.gate.fired:
-            # We halted because we could not check, not because we found
-            # something. Saying otherwise would be a lie to a worried person.
-            body = (
-                f"{t('escalate.unavailable.title')}\n\n"
-                f"{t('escalate.unavailable.body')}"
-            )
-        else:
-            body = (
-                f"{t('escalate.emergency.title')}\n\n"
-                f"{t('escalate.emergency.body')}\n\n"
-                f"{t('escalate.emergency.footer')}"
-            )
+        body = (
+            f"{t('escalate.emergency.title')}\n\n"
+            f"{t('escalate.emergency.body')}\n\n"
+            f"{t('escalate.emergency.footer')}"
+        )
         self.transcript.append(Turn("system", body))
         return {
             "state": self.state.value,

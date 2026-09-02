@@ -57,10 +57,12 @@ def run_gate(
     has_emergency_flag = any(f.level == "emergency" for f in fired)
     model_is_concerned = bool(concern and concern.concerned)
 
-    # Fail closed. An unread message is not a safe message: we cannot tell a
-    # cough from a stroke, so we stop rather than carry on asking about timing.
+    # `escalate` means danger was found. A message we could not read is a
+    # separate thing, carried on read_failed: the caller must refuse to process
+    # it (an unread message is not a safe message) but it is not an emergency,
+    # and a blip in someone's capacity must not send a patient to hospital.
     return GateResult(
-        escalate=has_emergency_flag or model_is_concerned or read_failed,
+        escalate=has_emergency_flag or model_is_concerned,
         fired=fired,
         free_concern=concern,
         read_failed=read_failed,
