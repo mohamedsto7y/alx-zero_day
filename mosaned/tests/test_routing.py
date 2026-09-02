@@ -59,3 +59,32 @@ def test_chronic_cough_routes_to_pulmonology_urgently():
     result = decide(history, _gate(), load_flow("cough"), StubProvider())
     assert result.specialty == "pulmonology"
     assert result.care_level is CareLevel.URGENT
+
+
+def test_blood_streaked_sputum_is_urgent_pulmonology_not_an_ambulance():
+    """The case that exposed this: ten weeks of cough, phlegm with a bit of
+    blood, unintended weight loss. That is an urgent TB/malignancy workup, not
+    an emergency department. Sending them to an ED costs money they may not
+    have and teaches them the app panics."""
+    history = StructuredHistory(session_id="t")
+    history.derived["duration_category"] = "chronic"
+    gate = _gate(
+        _flag("haemoptysis_minor", "respiratory"),
+        _flag("unintended_weight_loss", "systemic"),
+        _flag("persistent_cough", "respiratory"),
+    )
+    result = decide(history, gate, load_flow("cough"), StubProvider())
+
+    assert result.care_level is CareLevel.URGENT
+    assert result.care_level is not CareLevel.EMERGENCY
+    assert result.specialty == "pulmonology"
+
+
+def test_blood_in_quantity_is_still_an_emergency():
+    """Splitting the flag must not soften the one that matters."""
+    history = StructuredHistory(session_id="t")
+    gate = GateResult(
+        escalate=True,
+        fired=[_flag("haemoptysis_significant", "respiratory", "emergency")],
+    )
+    assert care_level(gate) is CareLevel.EMERGENCY

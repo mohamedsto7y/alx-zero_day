@@ -130,7 +130,7 @@ def test_cannot_be_talked_out_of_escalating():
 
 def test_escalation_stops_the_intake_completely():
     session = IntakeSession(_provider=SilentProvider())
-    session.send("I am coughing up blood")
+    session.send("I am coughing up a lot of blood")
     assert session.state is SessionState.ESCALATED
     result = session.send("ok but what about my cough")
     assert session.state is SessionState.ESCALATED
@@ -170,3 +170,32 @@ def test_an_ordinary_follow_up_answer_does_not_escalate():
     result = session.send("it's dry")
     assert session.state is SessionState.GATHERING
     assert "emergency" not in result["reply"].lower()
+
+
+def test_a_bit_of_blood_does_not_trigger_the_emergency_flag():
+    """Before the split, "a bit of blood" fired haemoptysis_significant on both
+    a 7B and Gemini -- not because either misread it, but because the list gave
+    them nowhere else to put it."""
+    result = run_gate(
+        "I've had a cough for 10 weeks, bringing up phlegm with a bit of blood "
+        "in it, and I've lost weight",
+        SilentProvider(), turn=1,
+    )
+    fired = {f.flag_id for f in result.fired}
+    assert "haemoptysis_minor" in fired
+    assert "haemoptysis_significant" not in fired
+    assert not result.escalate, "urgent, not an ambulance"
+
+
+def test_unqualified_blood_is_urgent_and_self_corrects_next_turn():
+    """"I'm coughing up blood" with no amount given fires the urgent flag, not
+    the emergency one. The flow's next question asks about the blood, and the
+    gate runs on every message -- so an under-call on turn one is caught on
+    turn two rather than being final."""
+    session = IntakeSession(_provider=SilentProvider())
+    session.send("I have a cough and I'm coughing up blood")
+    assert session.state is SessionState.GATHERING
+    assert "haemoptysis_minor" in {f.flag_id for f in session.gate.fired}
+
+    session.send("it's a lot of blood, filling a cup of blood each time")
+    assert session.state is SessionState.ESCALATED

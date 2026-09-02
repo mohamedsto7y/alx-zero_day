@@ -152,6 +152,10 @@
     {
       "when_flag_fired": "persistent_cough",
       "note": "Cough over three weeks. Consider chest imaging and TB screening per local protocol."
+    },
+    {
+      "when_flag_fired": "haemoptysis_minor",
+      "note": "Blood-streaked sputum reported. TB and malignancy warrant consideration; consider chest imaging and TB screening per local protocol."
     }
   ],
   "routing": {

@@ -9,54 +9,245 @@
     "urgent": "Continue intake, but mark the history urgent and steer routing."
   },
   "flags": [
-    {"id": "chest_pain_severe", "category": "cardiac", "level": "emergency", "sense": "severe, crushing, or pressure-like chest pain, or chest pain spreading to the arm, jaw, neck, or back"},
-    {"id": "collapse_with_cardiac_features", "category": "cardiac", "level": "emergency", "sense": "fainting or collapse that happened during exertion, or together with chest pain or palpitations"},
-
-    {"id": "breathless_at_rest", "category": "respiratory", "level": "emergency", "sense": "severe difficulty breathing, or breathless while sitting still"},
-    {"id": "cannot_speak_full_sentences", "category": "respiratory", "level": "emergency", "sense": "too breathless to finish a full sentence"},
-    {"id": "cyanosis", "category": "respiratory", "level": "emergency", "sense": "lips, tongue, or face turning blue or grey"},
-    {"id": "choking_or_inhaled_object", "category": "respiratory", "level": "emergency", "sense": "choking, or something may have been swallowed or inhaled into the airway"},
-    {"id": "haemoptysis_significant", "category": "respiratory", "level": "emergency", "sense": "coughing up a significant amount of fresh red blood"},
-
-    {"id": "stroke_signs", "category": "neurological", "level": "emergency", "sense": "sudden face drooping, sudden weakness or numbness on one side, or sudden difficulty speaking or understanding speech"},
-    {"id": "thunderclap_headache", "category": "neurological", "level": "emergency", "sense": "a sudden, severe headache that reached its worst within seconds or minutes, or the worst headache of their life"},
-    {"id": "seizure", "category": "neurological", "level": "emergency", "sense": "a seizure or fit, especially a first one or one that will not stop"},
-    {"id": "sudden_vision_loss", "category": "neurological", "level": "emergency", "sense": "sudden loss of vision in one or both eyes"},
-    {"id": "meningitis_signs", "category": "neurological", "level": "emergency", "sense": "fever together with a stiff neck, dislike of bright light, or a rash that does not fade when pressed"},
-    {"id": "altered_consciousness", "category": "neurological", "level": "emergency", "sense": "new confusion, extreme drowsiness, difficulty waking, or unresponsiveness"},
-
-    {"id": "airway_swelling", "category": "anaphylaxis", "level": "emergency", "sense": "swelling of the lips, tongue, or throat, or a tight throat"},
-    {"id": "allergic_reaction_systemic", "category": "anaphylaxis", "level": "emergency", "sense": "a widespread rash or hives together with breathing difficulty, dizziness, or vomiting after a food, sting, or medicine"},
-
-    {"id": "uncontrolled_bleeding", "category": "haemorrhage", "level": "emergency", "sense": "heavy bleeding that will not stop"},
-    {"id": "haematemesis_or_melaena", "category": "haemorrhage", "level": "emergency", "sense": "vomiting blood, or passing black tarry stools"},
-    {"id": "heavy_rectal_bleeding", "category": "haemorrhage", "level": "emergency", "sense": "passing a large amount of fresh blood from the back passage"},
-
-    {"id": "sepsis_signs", "category": "sepsis", "level": "emergency", "sense": "fever with shaking chills, mottled or very pale skin, and looking or feeling extremely unwell"},
-    {"id": "fever_immunosuppressed", "category": "sepsis", "level": "emergency", "sense": "a fever in someone on chemotherapy, taking immune-suppressing medicine, or without a spleen"},
-
-    {"id": "acute_abdomen", "category": "abdominal", "level": "emergency", "sense": "sudden severe abdominal pain, or an abdomen that is rigid and tender to touch"},
-    {"id": "testicular_torsion", "category": "abdominal", "level": "emergency", "sense": "sudden severe pain or swelling in a testicle"},
-
-    {"id": "pregnancy_bleeding_or_pain", "category": "obstetric", "level": "emergency", "sense": "pregnant, or possibly pregnant, with vaginal bleeding or severe abdominal pain"},
-    {"id": "preeclampsia_signs", "category": "obstetric", "level": "emergency", "sense": "pregnant with a severe headache, visual disturbance, upper abdominal pain, or sudden swelling of the face and hands"},
-    {"id": "reduced_fetal_movements", "category": "obstetric", "level": "emergency", "sense": "pregnant and the baby is moving less than usual or not at all"},
-
-    {"id": "suicidal_intent", "category": "psychiatric", "level": "emergency", "sense": "thoughts of ending their life, a plan to do so, or having already acted on it"},
-    {"id": "harm_to_others", "category": "psychiatric", "level": "emergency", "sense": "intent to seriously harm someone else"},
-
-    {"id": "head_injury_red_flags", "category": "trauma", "level": "emergency", "sense": "a head injury followed by vomiting, drowsiness, confusion, or fluid from the nose or ear"},
-    {"id": "poisoning_or_overdose", "category": "trauma", "level": "emergency", "sense": "a suspected overdose, poisoning, or swallowing something harmful"},
-    {"id": "airway_burn", "category": "trauma", "level": "emergency", "sense": "burns to the face, or breathing in smoke or hot gases"},
-    {"id": "infant_fever", "category": "paediatric", "level": "emergency", "sense": "a baby under three months old with a fever"},
-
-    {"id": "unintended_weight_loss", "category": "systemic", "level": "urgent", "sense": "losing weight without trying"},
-    {"id": "night_sweats", "category": "systemic", "level": "urgent", "sense": "drenching night sweats that soak the bedclothes"},
-    {"id": "persistent_cough", "category": "respiratory", "level": "urgent", "sense": "a cough lasting longer than three weeks"},
-    {"id": "progressive_breathlessness", "category": "respiratory", "level": "urgent", "sense": "breathlessness that has been getting steadily worse over weeks"},
-    {"id": "new_lump", "category": "systemic", "level": "urgent", "sense": "a new lump anywhere, or a mole that has changed"},
-    {"id": "haematuria", "category": "urological", "level": "urgent", "sense": "blood in the urine"},
-    {"id": "bowel_habit_change", "category": "abdominal", "level": "urgent", "sense": "a lasting change in bowel habit for more than three weeks"},
-    {"id": "postmenopausal_bleeding", "category": "gynaecological", "level": "urgent", "sense": "vaginal bleeding after the menopause"}
+    {
+      "id": "chest_pain_severe",
+      "category": "cardiac",
+      "level": "emergency",
+      "sense": "severe, crushing, or pressure-like chest pain, or chest pain spreading to the arm, jaw, neck, or back"
+    },
+    {
+      "id": "collapse_with_cardiac_features",
+      "category": "cardiac",
+      "level": "emergency",
+      "sense": "fainting or collapse that happened during exertion, or together with chest pain or palpitations"
+    },
+    {
+      "id": "breathless_at_rest",
+      "category": "respiratory",
+      "level": "emergency",
+      "sense": "severe difficulty breathing, or breathless while sitting still"
+    },
+    {
+      "id": "cannot_speak_full_sentences",
+      "category": "respiratory",
+      "level": "emergency",
+      "sense": "too breathless to finish a full sentence"
+    },
+    {
+      "id": "cyanosis",
+      "category": "respiratory",
+      "level": "emergency",
+      "sense": "lips, tongue, or face turning blue or grey"
+    },
+    {
+      "id": "choking_or_inhaled_object",
+      "category": "respiratory",
+      "level": "emergency",
+      "sense": "choking, or something may have been swallowed or inhaled into the airway"
+    },
+    {
+      "id": "haemoptysis_significant",
+      "category": "respiratory",
+      "level": "emergency",
+      "sense": "coughing up blood in quantity -- more than streaks or specks; for example filling a tissue or a cup, or repeated mouthfuls of bright red blood"
+    },
+    {
+      "id": "haemoptysis_minor",
+      "category": "respiratory",
+      "level": "urgent",
+      "sense": "streaks or specks of blood in the phlegm, or a small amount of blood when coughing"
+    },
+    {
+      "id": "stroke_signs",
+      "category": "neurological",
+      "level": "emergency",
+      "sense": "sudden face drooping, sudden weakness or numbness on one side, or sudden difficulty speaking or understanding speech"
+    },
+    {
+      "id": "thunderclap_headache",
+      "category": "neurological",
+      "level": "emergency",
+      "sense": "a sudden, severe headache that reached its worst within seconds or minutes, or the worst headache of their life"
+    },
+    {
+      "id": "seizure",
+      "category": "neurological",
+      "level": "emergency",
+      "sense": "a seizure or fit, especially a first one or one that will not stop"
+    },
+    {
+      "id": "sudden_vision_loss",
+      "category": "neurological",
+      "level": "emergency",
+      "sense": "sudden loss of vision in one or both eyes"
+    },
+    {
+      "id": "meningitis_signs",
+      "category": "neurological",
+      "level": "emergency",
+      "sense": "fever together with a stiff neck, dislike of bright light, or a rash that does not fade when pressed"
+    },
+    {
+      "id": "altered_consciousness",
+      "category": "neurological",
+      "level": "emergency",
+      "sense": "new confusion, extreme drowsiness, difficulty waking, or unresponsiveness"
+    },
+    {
+      "id": "airway_swelling",
+      "category": "anaphylaxis",
+      "level": "emergency",
+      "sense": "swelling of the lips, tongue, or throat, or a tight throat"
+    },
+    {
+      "id": "allergic_reaction_systemic",
+      "category": "anaphylaxis",
+      "level": "emergency",
+      "sense": "a widespread rash or hives together with breathing difficulty, dizziness, or vomiting after a food, sting, or medicine"
+    },
+    {
+      "id": "uncontrolled_bleeding",
+      "category": "haemorrhage",
+      "level": "emergency",
+      "sense": "heavy bleeding that will not stop"
+    },
+    {
+      "id": "haematemesis_or_melaena",
+      "category": "haemorrhage",
+      "level": "emergency",
+      "sense": "vomiting blood, or passing black tarry stools"
+    },
+    {
+      "id": "heavy_rectal_bleeding",
+      "category": "haemorrhage",
+      "level": "emergency",
+      "sense": "passing a large amount of fresh blood from the back passage"
+    },
+    {
+      "id": "sepsis_signs",
+      "category": "sepsis",
+      "level": "emergency",
+      "sense": "fever with shaking chills, mottled or very pale skin, and looking or feeling extremely unwell"
+    },
+    {
+      "id": "fever_immunosuppressed",
+      "category": "sepsis",
+      "level": "emergency",
+      "sense": "a fever in someone on chemotherapy, taking immune-suppressing medicine, or without a spleen"
+    },
+    {
+      "id": "acute_abdomen",
+      "category": "abdominal",
+      "level": "emergency",
+      "sense": "sudden severe abdominal pain, or an abdomen that is rigid and tender to touch"
+    },
+    {
+      "id": "testicular_torsion",
+      "category": "abdominal",
+      "level": "emergency",
+      "sense": "sudden severe pain or swelling in a testicle"
+    },
+    {
+      "id": "pregnancy_bleeding_or_pain",
+      "category": "obstetric",
+      "level": "emergency",
+      "sense": "pregnant, or possibly pregnant, with vaginal bleeding or severe abdominal pain"
+    },
+    {
+      "id": "preeclampsia_signs",
+      "category": "obstetric",
+      "level": "emergency",
+      "sense": "pregnant with a severe headache, visual disturbance, upper abdominal pain, or sudden swelling of the face and hands"
+    },
+    {
+      "id": "reduced_fetal_movements",
+      "category": "obstetric",
+      "level": "emergency",
+      "sense": "pregnant and the baby is moving less than usual or not at all"
+    },
+    {
+      "id": "suicidal_intent",
+      "category": "psychiatric",
+      "level": "emergency",
+      "sense": "thoughts of ending their life, a plan to do so, or having already acted on it"
+    },
+    {
+      "id": "harm_to_others",
+      "category": "psychiatric",
+      "level": "emergency",
+      "sense": "intent to seriously harm someone else"
+    },
+    {
+      "id": "head_injury_red_flags",
+      "category": "trauma",
+      "level": "emergency",
+      "sense": "a head injury followed by vomiting, drowsiness, confusion, or fluid from the nose or ear"
+    },
+    {
+      "id": "poisoning_or_overdose",
+      "category": "trauma",
+      "level": "emergency",
+      "sense": "a suspected overdose, poisoning, or swallowing something harmful"
+    },
+    {
+      "id": "airway_burn",
+      "category": "trauma",
+      "level": "emergency",
+      "sense": "burns to the face, or breathing in smoke or hot gases"
+    },
+    {
+      "id": "infant_fever",
+      "category": "paediatric",
+      "level": "emergency",
+      "sense": "a baby under three months old with a fever"
+    },
+    {
+      "id": "unintended_weight_loss",
+      "category": "systemic",
+      "level": "urgent",
+      "sense": "losing weight without trying"
+    },
+    {
+      "id": "night_sweats",
+      "category": "systemic",
+      "level": "urgent",
+      "sense": "drenching night sweats that soak the bedclothes"
+    },
+    {
+      "id": "persistent_cough",
+      "category": "respiratory",
+      "level": "urgent",
+      "sense": "a cough lasting longer than three weeks"
+    },
+    {
+      "id": "progressive_breathlessness",
+      "category": "respiratory",
+      "level": "urgent",
+      "sense": "breathlessness that has been getting steadily worse over weeks"
+    },
+    {
+      "id": "new_lump",
+      "category": "systemic",
+      "level": "urgent",
+      "sense": "a new lump anywhere, or a mole that has changed"
+    },
+    {
+      "id": "haematuria",
+      "category": "urological",
+      "level": "urgent",
+      "sense": "blood in the urine"
+    },
+    {
+      "id": "bowel_habit_change",
+      "category": "abdominal",
+      "level": "urgent",
+      "sense": "a lasting change in bowel habit for more than three weeks"
+    },
+    {
+      "id": "postmenopausal_bleeding",
+      "category": "gynaecological",
+      "level": "urgent",
+      "sense": "vaginal bleeding after the menopause"
+    }
   ]
 }
